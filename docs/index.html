@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#08131c">
+  <title>Поймай объект / Catch AR</title>
+  <style>
+    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;background:#08131c;color:#eaf5f5;font-family:system-ui,sans-serif;overflow:hidden}
+    header{height:70px;padding:10px max(18px,env(safe-area-inset-right)) 10px max(18px,env(safe-area-inset-left));display:flex;align-items:center;gap:16px;border-bottom:1px solid #20333d;background:#08131c}
+    .mark{font-size:13px;letter-spacing:2px;white-space:nowrap;color:#7affc2;font-weight:700}#support{flex:1;font-size:12px;color:#a5b8c4;line-height:1.35}
+    button{border:0;border-radius:6px;background:#7affc2;color:#08131c;font-weight:750;padding:13px 22px;font-size:13px;cursor:pointer;white-space:nowrap}button:disabled{background:#20333d;color:#82949f;cursor:default}button:focus-visible{outline:2px solid white;outline-offset:3px}
+    #unity-container{position:absolute;inset:70px 0 0}canvas{width:100%;height:100%;display:block;touch-action:none;outline:none}#loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#08131c;z-index:2}.loader{max-width:380px;width:75%}.loader h1{font-size:40px;letter-spacing:-2px;margin:0 0 12px}.loader p{font-size:14px;color:#a5b8c4;line-height:1.5}.track{height:3px;background:#20333d;margin-top:28px}#progress{height:100%;width:0;background:#7affc2}#error{display:none;color:#ffcb94;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.5}
+    @media(max-width:600px){header{height:90px;gap:10px}.mark{display:none}#unity-container{top:90px}button{padding:13px 15px}#support{font-size:11px}}
+  </style>
+</head>
+<body>
+  <header><span class="mark">CATCH / AR</span><span id="support" role="status">Проверяем поддержку дополненной реальности…</span><button id="enterar" disabled>ЗАПУСТИТЬ AR ↗</button></header>
+  <main id="unity-container">
+    <canvas id="unity-canvas" tabindex="0" aria-label="Мини-игра Поймай объект"></canvas>
+    <div id="loading"><div class="loader"><h1>Твой мир.<br>Твоя игра.</h1><p id="load-label">Загружаем игровую зону…</p><div class="track"><div id="progress"></div></div><p id="error" role="alert"></p></div></div>
+  </main>
+  <script>
+    let unityInstance=null, arSupported=false;
+    const canvas=document.querySelector('#unity-canvas'), arButton=document.querySelector('#enterar'), support=document.querySelector('#support');
+    function updateSupport(){
+      arButton.disabled=!arSupported||!unityInstance;
+      if(!window.isSecureContext) support.textContent='Для AR открой сайт по HTTPS. На компьютере доступно демо.';
+      else if(arSupported) support.textContent='AR готова · разреши доступ к камере и наведи телефон на поверхность.';
+      else support.textContent='AR недоступна в этом браузере. Играй в демо мышью или открой на Android с WebXR.';
+    }
+    document.addEventListener('onARSupportedCheck',event=>{arSupported=event.detail.supported;updateSupport()});
+    arButton.addEventListener('click',()=>{
+      if(!unityInstance||!arSupported)return;
+      canvas.focus();
+      unityInstance.Module.WebXR.toggleAR();
+    });
+    function fail(message){
+      document.querySelector('#load-label').textContent='Не удалось запустить игру';
+      const error=document.querySelector('#error');error.style.display='block';error.textContent=String(message);
+      document.querySelector('#loading').style.display='flex';
+    }
+    const buildUrl='Build';
+    const config={
+      dataUrl:buildUrl+'/WebGL.data',
+      frameworkUrl:buildUrl+'/WebGL.framework.js',
+      codeUrl:buildUrl+'/WebGL.wasm',
+      streamingAssetsUrl:'StreamingAssets',companyName:'AR Lab',productName:'Catch AR — Поймай объект',productVersion:'1.1.0',
+      showBanner:(message,type)=>{if(type==='error')fail(message)},
+      autoSyncPersistentDataPath:true,
+      devicePixelRatio:Math.min(window.devicePixelRatio||1,1.5)
+    };
+    
+    const script=document.createElement('script');script.src=buildUrl+'/WebGL.loader.js';
+    script.onerror=()=>fail('Файлы сборки не найдены. Запусти локальный сервер через Start-CatchAR.ps1.');
+    script.onload=()=>createUnityInstance(canvas,config,progress=>{document.querySelector('#progress').style.width=(progress*100)+'%'}).then(instance=>{
+      unityInstance=instance;document.querySelector('#loading').style.display='none';canvas.focus();updateSupport();
+    }).catch(fail);
+    document.body.appendChild(script);
+    if(navigator.xr&&window.isSecureContext) navigator.xr.isSessionSupported('immersive-ar').then(value=>{arSupported=value;updateSupport()}).catch(()=>updateSupport());
+    else updateSupport();
+    window.addEventListener('unhandledrejection',event=>console.error(event.reason));
+  </script>
+</body>
+</html>

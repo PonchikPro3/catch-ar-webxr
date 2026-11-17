@@ -1,0 +1,6 @@
+* text=auto
+*.wasm -text
+*.data -text
+*.ttf -text
+*.png -text
+*.wav -text

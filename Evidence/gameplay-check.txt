@@ -1,0 +1,4 @@
+Raycast catch passed; score=10; caught=1; frame=7191
+Timer ended round; targets cleaned; expiry counted=1
+Restart resets timer/score/counters: passed
+Camera pose reset after AR: passed

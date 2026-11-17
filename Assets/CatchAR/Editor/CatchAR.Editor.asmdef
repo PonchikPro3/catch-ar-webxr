@@ -1,0 +1,7 @@
+{
+  "name": "CatchAR.Editor",
+  "rootNamespace": "CatchAR.Editor",
+  "references": ["CatchAR.Runtime", "WebXR", "Unity.XR.Management", "Unity.XR.Management.Editor", "UnityEngine.SpatialTracking", "Unity.TextMeshPro", "Unity.InputSystem", "UnityEngine.UI", "Unity.RenderPipelines.Core.Runtime", "Unity.RenderPipelines.Universal.Runtime"],
+  "includePlatforms": ["Editor"],
+  "autoReferenced": true
+}

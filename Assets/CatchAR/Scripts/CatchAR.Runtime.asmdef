@@ -1,0 +1,6 @@
+{
+  "name": "CatchAR.Runtime",
+  "rootNamespace": "CatchAR",
+  "references": ["WebXR", "Unity.TextMeshPro", "Unity.InputSystem", "UnityEngine.UI"],
+  "autoReferenced": true
+}

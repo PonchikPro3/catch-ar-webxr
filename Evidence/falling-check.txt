@@ -1,0 +1,1 @@
+Passed: spawn above player; vertical accelerated fall; raycast catch; no duplicate score; removal at ground; miss count; restart
