@@ -24,8 +24,8 @@ namespace CatchAR
         [Min(5)] public float roundDuration = 60;
         [Min(1)] public int maxTargets = 5;
         [Header("Falling objects")]
-        [Min(.5f)] public float spawnRadiusMin = 1.15f;
-        [Min(1)] public float spawnRadiusMax = 2.3f;
+        [Min(.5f)] public float spawnRadiusMin = 1.3f;
+        [Min(1)] public float spawnRadiusMax = 3.0f;
         [Min(1)] public float spawnHeight = 2.8f;
         [Min(.05f)] public float initialFallSpeed = .35f;
         [Min(0)] public float fallAcceleration = .22f;
@@ -39,6 +39,7 @@ namespace CatchAR
         public int Best { get; private set; }
         public bool IsAR => WebXRManager.Instance != null && WebXRManager.Instance.XRState == WebXRState.AR;
         public int ActiveTargets => targets.Count;
+        public IReadOnlyList<CatchTarget> Targets => targets;
         public float GroundHeight { get; private set; }
         public bool SimulationActive => visible && Phase == GamePhase.Playing;
         public Camera ViewCamera => xrCamera.GetCamera(IsAR ? WebXRCamera.CameraID.LeftAR : WebXRCamera.CameraID.Main);

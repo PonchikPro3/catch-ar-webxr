@@ -27,6 +27,48 @@ namespace CatchAR.Editor
         static TMP_FontAsset font;
         static Material mint, gold, dark, grid;
 
+        public static void ApplyGuidanceUpdate()
+        {
+            var game = UnityEngine.Object.FindFirstObjectByType<CatchGame>();
+            if (game == null || game.hud == null) throw new Exception("Open the CatchAR scene first");
+            game.spawnRadiusMin = 1.3f;
+            game.spawnRadiusMax = 3.0f;
+            ConfigureGuidance(game);
+            EditorUtility.SetDirty(game);
+            EditorSceneManager.MarkSceneDirty(game.gameObject.scene);
+            EditorSceneManager.SaveScene(game.gameObject.scene, ScenePath);
+            AssetDatabase.SaveAssets();
+        }
+
+        static void ConfigureGuidance(CatchGame game)
+        {
+            var safe = game.hud.transform.Find("Safe Area");
+            if (safe == null) throw new Exception("Safe Area UI is missing");
+            var layer = safe.Find("Offscreen Directions") as RectTransform;
+            if (layer == null) layer = Rect("Offscreen Directions", safe, .015f, .075f, .985f, .92f);
+            layer.SetAsLastSibling();
+            var indicators = layer.GetComponent<OffscreenIndicators>();
+            if (indicators == null) indicators = layer.gameObject.AddComponent<OffscreenIndicators>();
+            indicators.game = game;
+            indicators.bounds = layer;
+            indicators.markers = new OffscreenArrow[5];
+            for (int i = 0; i < indicators.markers.Length; i++)
+            {
+                string name = "Target Direction " + (i + 1);
+                var pointer = layer.Find(name) as RectTransform;
+                if (pointer == null) pointer = Rect(name, layer, .5f, .5f, .5f, .5f);
+                pointer.sizeDelta = new Vector2(44, 44);
+                var arrow = pointer.GetComponent<OffscreenArrow>();
+                if (arrow == null) arrow = pointer.gameObject.AddComponent<OffscreenArrow>();
+                arrow.color = Mint;
+                arrow.raycastTarget = false;
+                indicators.markers[i] = arrow;
+                pointer.gameObject.SetActive(false);
+                EditorUtility.SetDirty(arrow);
+            }
+            EditorUtility.SetDirty(indicators);
+        }
+
         [MenuItem("Catch AR/Apply falling objects update")]
         public static void ApplyFallingUpdate()
         {
@@ -135,6 +177,7 @@ namespace CatchAR.Editor
             game.audioSource.playOnAwake = false;
             game.catchSound = CreateSound();
             game.hud = CreateHud();
+            ConfigureGuidance(game);
             EditorSceneManager.SaveScene(scene, ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
             Selection.activeGameObject = game.gameObject;
@@ -146,7 +189,7 @@ namespace CatchAR.Editor
         {
             PlayerSettings.companyName = "AR Lab";
             PlayerSettings.productName = "Catch AR — Поймай объект";
-            PlayerSettings.bundleVersion = "1.1.0";
+            PlayerSettings.bundleVersion = "1.2.0";
             PlayerSettings.colorSpace = ColorSpace.Linear;
             PlayerSettings.runInBackground = true;
             PlayerSettings.defaultWebScreenWidth = 1280;

@@ -41,17 +41,18 @@
       document.querySelector('#loading').style.display='flex';
     }
     const buildUrl='Build';
+    const assetVersion='?v=1.2.0';
     const config={
-      dataUrl:buildUrl+'/WebGL.data',
-      frameworkUrl:buildUrl+'/WebGL.framework.js',
-      codeUrl:buildUrl+'/WebGL.wasm',
-      streamingAssetsUrl:'StreamingAssets',companyName:'AR Lab',productName:'Catch AR — Поймай объект',productVersion:'1.1.0',
+      dataUrl:buildUrl+'/WebGL.data'+assetVersion,
+      frameworkUrl:buildUrl+'/WebGL.framework.js'+assetVersion,
+      codeUrl:buildUrl+'/WebGL.wasm'+assetVersion,
+      streamingAssetsUrl:'StreamingAssets',companyName:'AR Lab',productName:'Catch AR — Поймай объект',productVersion:'1.2.0',
       showBanner:(message,type)=>{if(type==='error')fail(message)},
       autoSyncPersistentDataPath:true,
       devicePixelRatio:Math.min(window.devicePixelRatio||1,1.5)
     };
     
-    const script=document.createElement('script');script.src=buildUrl+'/WebGL.loader.js';
+    const script=document.createElement('script');script.src=buildUrl+'/WebGL.loader.js'+assetVersion;
     script.onerror=()=>fail('Файлы сборки не найдены. Запусти локальный сервер через Start-CatchAR.ps1.');
     script.onload=()=>createUnityInstance(canvas,config,progress=>{document.querySelector('#progress').style.width=(progress*100)+'%'}).then(instance=>{
       unityInstance=instance;document.querySelector('#loading').style.display='none';canvas.focus();updateSupport();

@@ -1,0 +1,3 @@
+Passed: hidden for visible targets; left/right/up/down; rear hemisphere; exact rear; camera rotation; portrait screen; edge bounds; finite coordinates
+Runtime passed: right-edge marker; no touch blocking; hidden after turning; no stale marker after catch
+Five markers on one edge remain separated: passed
