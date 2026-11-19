@@ -26,8 +26,8 @@ namespace CatchAR
         [Header("Falling objects")]
         [Min(1)] public float spawnDistance = 2.5f;
         [Range(.1f, 1.2f)] public float spawnHeightAboveCamera = .5f;
-        [Min(.05f)] public float initialFallSpeed = .35f;
-        [Min(0)] public float fallAcceleration = .22f;
+        [Min(.05f)] public float initialFallSpeed = .28f;
+        [Min(0)] public float fallAcceleration = .14f;
 
         public GamePhase Phase { get; private set; }
         public int Score { get; private set; }

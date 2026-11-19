@@ -7606,8 +7606,8 @@ MonoBehaviour:
   maxTargets: 5
   spawnDistance: 2.5
   spawnHeightAboveCamera: 0.5
-  initialFallSpeed: 0.35
-  fallAcceleration: 0.22
+  initialFallSpeed: 0.28
+  fallAcceleration: 0.14
 --- !u!4 &1406722682
 Transform:
   m_ObjectHideFlags: 0

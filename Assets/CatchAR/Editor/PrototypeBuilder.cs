@@ -79,6 +79,18 @@ namespace CatchAR.Editor
             AssetDatabase.SaveAssets();
         }
 
+        public static void ApplyFallTimingUpdate()
+        {
+            var game = UnityEngine.Object.FindFirstObjectByType<CatchGame>();
+            if (game == null) throw new Exception("Open the CatchAR scene first");
+            game.initialFallSpeed = .28f;
+            game.fallAcceleration = .14f;
+            EditorUtility.SetDirty(game);
+            EditorSceneManager.MarkSceneDirty(game.gameObject.scene);
+            EditorSceneManager.SaveScene(game.gameObject.scene, ScenePath);
+            AssetDatabase.SaveAssets();
+        }
+
         [MenuItem("Catch AR/Apply falling objects update")]
         public static void ApplyFallingUpdate()
         {
@@ -199,7 +211,7 @@ namespace CatchAR.Editor
         {
             PlayerSettings.companyName = "AR Lab";
             PlayerSettings.productName = "Catch AR — Поймай объект";
-            PlayerSettings.bundleVersion = "1.3.0";
+            PlayerSettings.bundleVersion = "1.3.1";
             PlayerSettings.colorSpace = ColorSpace.Linear;
             PlayerSettings.runInBackground = true;
             PlayerSettings.defaultWebScreenWidth = 1280;

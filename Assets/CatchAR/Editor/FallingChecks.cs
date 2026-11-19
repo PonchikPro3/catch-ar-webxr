@@ -12,6 +12,7 @@ namespace CatchAR.Editor
         static CatchTarget target;
         static Vector3 initial;
         static double started, sampled;
+        static float fallStarted, legacyLifetime, landingStarted, measuredLifetime;
         static int stage;
         public static string Result { get; private set; } = "Not run";
 
@@ -65,21 +66,37 @@ namespace CatchAR.Editor
                 {
                     target = UnityEngine.Object.FindFirstObjectByType<CatchTarget>();
                     if (target == null || target.Resolved) return;
-                    var position = target.transform.position;
-                    position.y = game.GroundHeight + .151f;
-                    target.transform.position = position;
+                    fallStarted = Time.time;
+                    float oldDrop = target.transform.position.y - game.GroundHeight - .15f;
+                    legacyLifetime = (-.35f + Mathf.Sqrt(.35f * .35f + 2 * .22f * oldDrop)) / .22f;
                     stage = 3;
                 }
                 else if (stage == 3)
                 {
+                    if (target == null) throw new Exception("Target disappeared before visible floor contact");
+                    float bottom = Mathf.Min(target.coreRenderer.bounds.min.y, target.ringRenderer.bounds.min.y);
+                    if (bottom < game.GroundHeight - .003f) throw new Exception("Target passed through the floor");
+                    if (!target.Resolved) return;
+                    measuredLifetime = Time.time - fallStarted;
+                    if (measuredLifetime < legacyLifetime * 1.18f) throw new Exception("Falling time was not extended");
+                    if (Mathf.Abs(bottom - game.GroundHeight) > .003f) throw new Exception("Target landed above the visible floor");
+                    if (target.GetComponent<Collider>().enabled) throw new Exception("Landed target is still selectable");
+                    landingStarted = Time.time;
+                    target.Catch();
+                    if (game.Score != 10 || game.Missed != 1) throw new Exception("Landing awarded duplicate points or misses");
+                    stage = 4;
+                }
+                else if (stage == 4)
+                {
                     if (target != null) return;
+                    if (Time.time - landingStarted < .15f) throw new Exception("Landing disappeared without visible feedback");
                     if (game.Missed != 1 || game.Score != 10 || game.Caught != 1)
                         throw new Exception("Ground contact did not remove the target and count exactly one miss");
                     game.maxTargets = 5;
                     game.Restart();
                     if (game.Score != 0 || game.Caught != 0 || game.Missed != 0 || game.Remaining != 60)
                         throw new Exception("Restart did not reset the round");
-                    Result = "Passed: spawn above player; vertical accelerated fall; raycast catch; no duplicate score; removal at ground; miss count; restart";
+                    Result = $"Passed: spawn above player; vertical fall; raycast catch; no duplicate score; natural fall {measuredLifetime:F2}s vs legacy {legacyLifetime:F2}s; visible mesh contacts floor; short landing disappearance; one miss; landed target cannot be caught; restart";
                     Directory.CreateDirectory("Evidence");
                     File.WriteAllText("Evidence/falling-check.txt", Result);
                     Debug.Log(Result);

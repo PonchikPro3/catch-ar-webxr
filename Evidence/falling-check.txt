@@ -1,1 +1,1 @@
-Passed: spawn above player; vertical accelerated fall; raycast catch; no duplicate score; removal at ground; miss count; restart
+Passed: spawn above player; vertical fall; raycast catch; no duplicate score; natural fall 3,14s vs legacy 2,56s; visible mesh contacts floor; short landing disappearance; one miss; landed target cannot be caught; restart

@@ -16,9 +16,9 @@ namespace CatchAR
         public float GroundHeight { get; private set; }
         public bool Resolved => resolved;
         CatchGame game;
-        float fallSpeed, acceleration, age;
-        const float GroundClearance = .15f;
-        bool resolved;
+        float fallSpeed, acceleration, age, landedAge, landingClearance;
+        const float LandingDuration = .25f;
+        bool resolved, landed;
 
         public void Initialize(CatchGame owner, bool gold, float groundHeight, float speed, float gravity)
         {
@@ -33,23 +33,40 @@ namespace CatchAR
 
         void Update()
         {
-            if (resolved || !game.SimulationActive) return;
-            age += Time.deltaTime;
+            if (!game.SimulationActive) return;
             float dt = Time.deltaTime;
+            if (resolved)
+            {
+                if (!landed) return;
+                landedAge += dt;
+                float remainingScale = 1 - Mathf.SmoothStep(0, 1, landedAge / LandingDuration);
+                transform.localScale = Vector3.one * remainingScale;
+                Vector3 grounded = transform.position;
+                grounded.y = GroundHeight + landingClearance * remainingScale;
+                transform.position = grounded;
+                return;
+            }
+            age += dt;
+            core.Rotate(24 * dt, 50 * dt, 16 * dt);
+            ring.Rotate(0, 0, -70 * dt, Space.Self);
+            float scale = Mathf.SmoothStep(0, 1, Mathf.Clamp01(age / .22f));
+            transform.localScale = Vector3.one * scale;
+            // Contact follows the visible mesh, including its current rotation.
+            float clearance = transform.position.y - Mathf.Min(coreRenderer.bounds.min.y, ringRenderer.bounds.min.y);
             Vector3 position = transform.position;
             position.y -= fallSpeed * dt + .5f * acceleration * dt * dt;
             fallSpeed += acceleration * dt;
-            position.y = Mathf.Max(position.y, GroundHeight + GroundClearance);
+            bool touchesGround = position.y <= GroundHeight + clearance;
+            position.y = Mathf.Max(position.y, GroundHeight + clearance);
             transform.position = position;
-            core.Rotate(24 * Time.deltaTime, 50 * Time.deltaTime, 16 * Time.deltaTime);
-            ring.Rotate(0, 0, -70 * Time.deltaTime, Space.Self);
-            float scale = Mathf.SmoothStep(0, 1, Mathf.Clamp01(age / .22f));
-            transform.localScale = Vector3.one * scale;
-            if (position.y <= GroundHeight + GroundClearance)
+            if (touchesGround)
             {
-                resolved = true;
+                landed = resolved = true;
+                landingClearance = clearance;
+                GetComponent<Collider>().enabled = false;
                 game.RegisterEscape(this);
-                Destroy(gameObject);
+                // Finish cleanup even if the round ends during the landing animation.
+                Destroy(gameObject, LandingDuration);
             }
         }
 
