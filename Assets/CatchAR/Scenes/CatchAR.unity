@@ -7604,9 +7604,8 @@ MonoBehaviour:
   catchSound: {fileID: 8300000, guid: f228b14191f2e7e48ae082655f894d87, type: 3}
   roundDuration: 60
   maxTargets: 5
-  spawnRadiusMin: 1.3
-  spawnRadiusMax: 3
-  spawnHeight: 2.8
+  spawnDistance: 2.5
+  spawnHeightAboveCamera: 0.5
   initialFallSpeed: 0.35
   fallAcceleration: 0.22
 --- !u!4 &1406722682

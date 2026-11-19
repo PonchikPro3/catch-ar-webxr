@@ -39,7 +39,7 @@ namespace CatchAR.Editor
                 {
                     target = UnityEngine.Object.FindFirstObjectByType<CatchTarget>();
                     if (target == null) return;
-                    if (target.transform.position.y < game.ViewCamera.transform.position.y + .8f)
+                    if (target.transform.position.y < game.ViewCamera.transform.position.y + game.spawnHeightAboveCamera - .15f)
                         throw new Exception("Target was not spawned above the player");
                     initial = target.transform.position;
                     sampled = EditorApplication.timeSinceStartup;

@@ -31,8 +31,6 @@ namespace CatchAR.Editor
         {
             var game = UnityEngine.Object.FindFirstObjectByType<CatchGame>();
             if (game == null || game.hud == null) throw new Exception("Open the CatchAR scene first");
-            game.spawnRadiusMin = 1.3f;
-            game.spawnRadiusMax = 3.0f;
             ConfigureGuidance(game);
             EditorUtility.SetDirty(game);
             EditorSceneManager.MarkSceneDirty(game.gameObject.scene);
@@ -67,6 +65,18 @@ namespace CatchAR.Editor
                 EditorUtility.SetDirty(arrow);
             }
             EditorUtility.SetDirty(indicators);
+        }
+
+        public static void ApplySpawnRingUpdate()
+        {
+            var game = UnityEngine.Object.FindFirstObjectByType<CatchGame>();
+            if (game == null) throw new Exception("Open the CatchAR scene first");
+            game.spawnDistance = 2.5f;
+            game.spawnHeightAboveCamera = .5f;
+            EditorUtility.SetDirty(game);
+            EditorSceneManager.MarkSceneDirty(game.gameObject.scene);
+            EditorSceneManager.SaveScene(game.gameObject.scene, ScenePath);
+            AssetDatabase.SaveAssets();
         }
 
         [MenuItem("Catch AR/Apply falling objects update")]
@@ -189,7 +199,7 @@ namespace CatchAR.Editor
         {
             PlayerSettings.companyName = "AR Lab";
             PlayerSettings.productName = "Catch AR — Поймай объект";
-            PlayerSettings.bundleVersion = "1.2.0";
+            PlayerSettings.bundleVersion = "1.3.0";
             PlayerSettings.colorSpace = ColorSpace.Linear;
             PlayerSettings.runInBackground = true;
             PlayerSettings.defaultWebScreenWidth = 1280;

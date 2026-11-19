@@ -1,0 +1,2 @@
+Passed: 216 spawn points at exactly 2.5 m; fixed 0.5 m eye-relative height; no overhead positions; translated and elevated player origins
+Runtime passed: actual target on the fixed ring; visible in front of a level camera below the top HUD

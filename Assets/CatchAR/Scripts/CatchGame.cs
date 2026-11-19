@@ -24,9 +24,8 @@ namespace CatchAR
         [Min(5)] public float roundDuration = 60;
         [Min(1)] public int maxTargets = 5;
         [Header("Falling objects")]
-        [Min(.5f)] public float spawnRadiusMin = 1.3f;
-        [Min(1)] public float spawnRadiusMax = 3.0f;
-        [Min(1)] public float spawnHeight = 2.8f;
+        [Min(1)] public float spawnDistance = 2.5f;
+        [Range(.1f, 1.2f)] public float spawnHeightAboveCamera = .5f;
         [Min(.05f)] public float initialFallSpeed = .35f;
         [Min(0)] public float fallAcceleration = .22f;
 
@@ -193,28 +192,32 @@ namespace CatchAR
             phaseTime = 0;
         }
 
+        public Vector3 GetSpawnPosition(Vector3 playerPosition, float yawDegrees)
+        {
+            // Constant 3D distance, independent of floor height, camera tilt and rig origin.
+            float distance = Mathf.Max(1, spawnDistance);
+            float height = Mathf.Clamp(spawnHeightAboveCamera, .1f, distance * .5f);
+            float radius = Mathf.Sqrt(distance * distance - height * height);
+            float angle = yawDegrees * Mathf.Deg2Rad;
+            return playerPosition + new Vector3(Mathf.Sin(angle) * radius, height, Mathf.Cos(angle) * radius);
+        }
+
         void SpawnTarget()
         {
-            Vector3 local = Vector3.zero;
-            float height = IsAR ? Mathf.Max(spawnHeight, ViewCamera.transform.position.y - GroundHeight + 1.0f) : spawnHeight;
-            Vector3 center = IsAR ? new Vector3(ViewCamera.transform.position.x, GroundHeight, ViewCamera.transform.position.z) : arena.position;
+            Camera camera = ViewCamera;
+            Vector3 playerPosition = camera.transform.position;
             Vector3 world = Vector3.zero;
-            // AR: a full 360-degree ring around the player's current position. Demo: a visible patch
-            // in front of the fixed camera so mouse/touch testing stays playable.
+            // Only the azimuth changes. Each new object starts at exactly the same
+            // distance and eye-relative height. Already falling objects stay in world space.
+            float heading = Mathf.Atan2(camera.transform.forward.x, camera.transform.forward.z) * Mathf.Rad2Deg;
+            float halfHorizontalFov = Mathf.Atan(Mathf.Tan(camera.fieldOfView * Mathf.Deg2Rad * .5f) * camera.aspect) * Mathf.Rad2Deg;
+            float demoSpread = Mathf.Clamp(halfHorizontalFov - 9, 0, 24);
             for (int attempt = 0; attempt < 20; attempt++)
             {
-                if (IsAR)
-                {
-                    float angle = Random.Range(0, Mathf.PI * 2);
-                    float radius = Mathf.Sqrt(Random.Range(spawnRadiusMin * spawnRadiusMin, spawnRadiusMax * spawnRadiusMax));
-                    local = new Vector3(Mathf.Cos(angle) * radius, height + Random.Range(0, .35f), Mathf.Sin(angle) * radius);
-                }
-                else
-                {
-                    float halfWidth = Mathf.Clamp(Mathf.Tan(ViewCamera.fieldOfView * Mathf.Deg2Rad * .5f) * 3 * ViewCamera.aspect - .25f, .25f, 1.0f);
-                    local = new Vector3(Random.Range(-halfWidth, halfWidth), height + Random.Range(0, .25f), Random.Range(-.2f, .2f));
-                }
-                world = center + arena.rotation * local;
+                // Give the player a visible reference at the start of an AR round.
+                // Later targets still surround the player on the full ring.
+                float yaw = IsAR && spawned > 0 ? Random.Range(-180f, 180f) : heading + Random.Range(-demoSpread, demoSpread);
+                world = GetSpawnPosition(playerPosition, yaw);
                 bool overlaps = false;
                 foreach (var other in targets)
                     if ((world - other.transform.position).sqrMagnitude < .14f) overlaps = true;
