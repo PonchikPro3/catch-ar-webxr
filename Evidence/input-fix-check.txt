@@ -1,0 +1,1 @@
+Passed: nearest overlapping target; moved visible target caught without physics sync; camera-inside-target ray; exclusion zone pushes target to 2.5m; behind-camera and unrelated touch rejected; decorative HUD does not intercept touch. Physical AR device not available.

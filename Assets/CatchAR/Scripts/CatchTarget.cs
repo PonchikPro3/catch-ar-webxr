@@ -77,6 +77,18 @@ namespace CatchAR
             game.RegisterCatch(this);
             Destroy(gameObject);
         }
+
+        public void KeepClearOfPlayer(Transform player, float spawnDistance)
+        {
+            Vector3 delta = Vector3.ProjectOnPlane(transform.position - player.position, Vector3.up);
+            if (delta.sqrMagnitude >= 1) return;
+            if (delta.sqrMagnitude < .0001f) delta = Vector3.ProjectOnPlane(player.forward, Vector3.up);
+            if (delta.sqrMagnitude < .0001f) delta = Vector3.forward;
+            Vector3 position = transform.position;
+            Vector3 safe = player.position + delta.normalized * Mathf.Max(1.2f, spawnDistance);
+            position.x = safe.x; position.z = safe.z;
+            transform.position = position;
+        }
     }
 }
 

@@ -44,6 +44,7 @@ namespace CatchAR
         public bool SimulationActive => visible && Phase == GamePhase.Playing;
         public Camera ViewCamera => xrCamera.GetCamera(IsAR ? WebXRCamera.CameraID.LeftAR : WebXRCamera.CameraID.Main);
         readonly List<CatchTarget> targets = new List<CatchTarget>();
+        readonly List<RaycastResult> uiHits = new List<RaycastResult>();
         WebXRHitPoseData lastHit;
         float hitTime, phaseTime, nextSpawn, lastCatch = -100;
         int spawned, lastActionFrame = -1;
@@ -60,6 +61,7 @@ namespace CatchAR
             WebXRManager.OnXRChange += XRChanged;
             WebXRManager.OnViewerHitTestUpdate += HitUpdated;
             WebXRManager.OnVisibilityChange += VisibilityChanged;
+            Application.onBeforeRender += ProtectPlayerSpace;
         }
 
         void OnDisable()
@@ -67,6 +69,7 @@ namespace CatchAR
             WebXRManager.OnXRChange -= XRChanged;
             WebXRManager.OnViewerHitTestUpdate -= HitUpdated;
             WebXRManager.OnVisibilityChange -= VisibilityChanged;
+            Application.onBeforeRender -= ProtectPlayerSpace;
         }
 
         void Start()
@@ -110,31 +113,57 @@ namespace CatchAR
                     nextSpawn = Time.time + Mathf.Lerp(1.05f, .60f, 1 - Remaining / roundDuration);
                 }
             }
-            HandleInput();
             hud.Refresh(phaseTime);
+        }
+
+        void LateUpdate()
+        {
+            if (!visible) return;
+            ProtectPlayerSpace();
+            HandleInput();
+        }
+
+        [BeforeRenderOrder(10000)]
+        void ProtectPlayerSpace()
+        {
+            if (!SimulationActive) return;
+            foreach (var target in targets)
+                if (target != null && !target.Resolved) target.KeepClearOfPlayer(ViewCamera.transform, spawnDistance);
+        }
+
+        bool IsUIAt(Vector2 point)
+        {
+            if (EventSystem.current == null) return false;
+            uiHits.Clear();
+            EventSystem.current.RaycastAll(new PointerEventData(EventSystem.current) { position = point }, uiHits);
+            foreach (var hit in uiHits)
+                if (hit.module is UnityEngine.UI.GraphicRaycaster) return true;
+            return false;
         }
 
         void HandleInput()
         {
-            foreach (var controller in controllers)
-            {
-                if (!controller.isControllerActive || !controller.GetButtonDown(WebXRController.ButtonTypes.Trigger)) continue;
-                Act(new Ray(controller.transform.position, controller.transform.forward));
-            }
             // WebXR Export forwards screen-based AR selects as touch events. Handheld XR
             // controllers use the ray path above; lastActionFrame prevents duplicate actions.
             if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame)
             {
-                int id = Touchscreen.current.primaryTouch.touchId.ReadValue();
-                if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(id)) return;
                 Vector2 point = Touchscreen.current.primaryTouch.position.ReadValue();
+                if (IsUIAt(point)) return;
                 Act(ViewCamera.ScreenPointToRay(point), point);
+                return;
             }
             else if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
             {
-                if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
                 Vector2 point = Mouse.current.position.ReadValue();
+                if (IsUIAt(point)) return;
                 Act(ViewCamera.ScreenPointToRay(point), point);
+                return;
+            }
+            foreach (var controller in controllers)
+            {
+                if (!controller.isControllerActive || !controller.GetButtonDown(WebXRController.ButtonTypes.Trigger)) continue;
+                Act(new Ray(controller.transform.position, controller.transform.forward));
+                return;
             }
         }
 
@@ -146,10 +175,27 @@ namespace CatchAR
             // A select after the result starts another round even on headsets without mouse UI.
             if (Phase == GamePhase.Result && phaseTime > 1) { BeginCountdown(); return; }
             if (Phase != GamePhase.Playing) return;
-            if (Physics.Raycast(ray, out RaycastHit hit, 12) && hit.collider.TryGetComponent(out CatchTarget target))
+            CatchTarget selected = null;
+            float closest = float.PositiveInfinity;
+            foreach (var candidate in targets)
             {
-                hud.ShowCatchEffect(screenPoint ?? (Vector2)ViewCamera.WorldToScreenPoint(hit.point));
-                target.Catch();
+                if (candidate == null || candidate.Resolved || !candidate.gameObject.activeInHierarchy) continue;
+                Bounds bounds = TargetPicking.VisibleBounds(candidate);
+                float distance;
+                if (screenPoint.HasValue)
+                {
+                    distance = ViewCamera.WorldToScreenPoint(bounds.center).z;
+                    float padding = Mathf.Clamp(Screen.height * .016f, 10, 24);
+                    if (distance <= ViewCamera.nearClipPlane || distance > 12 ||
+                        !TargetPicking.ScreenHit(ViewCamera, bounds, screenPoint.Value, padding)) continue;
+                }
+                else if (!TargetPicking.RayHit(ray, bounds, out distance) || distance > 12) continue;
+                if (distance < closest) { closest = distance; selected = candidate; }
+            }
+            if (selected != null)
+            {
+                hud.ShowCatchEffect(screenPoint ?? (Vector2)ViewCamera.WorldToScreenPoint(selected.transform.position));
+                selected.Catch();
             }
             else
             {
