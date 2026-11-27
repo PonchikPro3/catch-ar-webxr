@@ -1,0 +1,9 @@
+Scanner 1.5.0 — 27 November 2026
+Docs: immersive-web Plane Detection explainer/specification (convex polygons), Hit Test Module, installed uGUI Basic Layout/GraphicRaycaster, Pipeline scripts/capture/wait.
+No new packages and no changes to WebXR vendor code. Runtime JS interop requests optional plane-detection for scan mode and uses the SDK session.refSpace.
+JS tests in Temp/UIReview/scanner-tests.cjs: mock XR frames, coordinate handedness, stable IDs, plane feature rejected -> hit-test fallback, tracking loss, source/RAF cleanup.
+Unity tests in Temp/UIReview/ScannerChecks.cs: synthetic horizontal/vertical polygons, classification, pause/resume, removal, hit stability, deduplication, 256-cell bound, reset. Additional live eval checked tracking-loss hiding, exit cleanup and falling-mode selection.
+Review pass 1: landscape mode picker and synthetic plane visualization. Review pass 2: reduced header/control heights to show more room; fresh portrait 390x844 captures show readable controls.
+Screenshots synthetic-planes-*.png show EDITOR TEST GEOMETRY, not a real room scan. mode-selection.png shows the actual mode picker.
+Temporary Game View was restored; a helper index error was corrected. No runtime scanner or compilation errors after the correction.
+Physical device scan, native plane availability, wall detection quality and tracking stability need testing on the user's WebXR device. No room geometry is fabricated in the shipped Editor/browser paths.

@@ -1,0 +1,1 @@
+Passed (mock XR frames, not a room scan): feature configuration deduplicated; stable plane IDs; polygon and normal coordinate conversion; unsupported plane getter falls back to hit-test; tracking loss; source cancellation; RAF cleanup; original features restored.

@@ -24,6 +24,7 @@ namespace CatchAR.Editor
             var old = game.hud.gameObject;
             var actualFont = game.hud.GetComponentInChildren<TMP_Text>(true).font;
             game.hud = CreateHud(actualFont);
+            ConfigureScanner(game);
             UnityEngine.Object.DestroyImmediate(old);
             PrototypeBuilder.ConfigureGuidance(game);
             Recolor("Mint.mat", WarmPalette.Orange);
@@ -44,6 +45,26 @@ namespace CatchAR.Editor
             if (mat == null) return;
             mat.SetColor("_BaseColor", color);
             EditorUtility.SetDirty(mat);
+        }
+
+        public static void ConfigureScanner(CatchGame game)
+        {
+            if (game.scanner == null) game.scanner = game.GetComponent<RoomSurfaceScanner>();
+            if (game.scanner == null) game.scanner = game.gameObject.AddComponent<RoomSurfaceScanner>();
+            string fillPath = Art + "/ScanFill.mat", linePath = Art + "/ScanLine.mat";
+            var fill = AssetDatabase.LoadAssetAtPath<Material>(fillPath);
+            if (fill == null) { fill = new Material(Shader.Find("CatchAR/Scan Surface")); AssetDatabase.CreateAsset(fill, fillPath); }
+            var line = AssetDatabase.LoadAssetAtPath<Material>(linePath);
+            if (line == null)
+            {
+                line = new Material(Shader.Find("Universal Render Pipeline/Particles/Unlit"));
+                line.SetColor("_BaseColor", Color.white);
+                line.SetFloat("_Cull", 0);
+                AssetDatabase.CreateAsset(line, linePath);
+            }
+            game.scanner.surfaceMaterial = fill;
+            game.scanner.lineMaterial = line;
+            EditorUtility.SetDirty(game.scanner);
         }
 
         static void LoadSprites()
@@ -121,6 +142,38 @@ namespace CatchAR.Editor
             hud.playButton = Button("Play", hud.menuStack, "Играть", .0f, .53f, 1, 1, upperButton, WarmPalette.Red, WarmPalette.Cream);
             hud.exitButton = Button("Exit", hud.menuStack, "Выход", .0f, .0f, 1, .47f, lowerButton, WarmPalette.Peach, WarmPalette.Ink);
             hud.menuNotice = Label("ARNotice", menu.transform, "", .1f, .08f, .9f, .22f, 27, WarmPalette.Ink);
+
+            var modes = Image("ModeSelection", safe, 0, 0, 1, 1, null, WarmPalette.Cream);
+            hud.modes = modes.gameObject;
+            hud.modeStack = Center("ModeButtons", modes.transform, 660, 766);
+            Label("ChooseMode", hud.modeStack, "Выбери режим", 0, .89f, 1, 1, 42, WarmPalette.Ink);
+            hud.fallingModeButton = Button("FallingMode", hud.modeStack, "Падающие", 0, .59f, 1, .87f, upperButton, WarmPalette.Red, WarmPalette.Cream);
+            hud.scanModeButton = Button("ScanMode", hud.modeStack, "Скан комнаты", 0, .29f, 1, .57f, lowerButton, WarmPalette.Red, WarmPalette.Cream);
+            hud.modeBackButton = Button("Back", hud.modeStack, "Назад", 0, 0, 1, .25f, lowerButton, WarmPalette.Peach, WarmPalette.Ink);
+
+            var scan = Rect("Scan HUD", safe, 0, 0, 1, 1);
+            hud.scanHud = scan.gameObject;
+            hud.scanInfo = Center("ScanInformation", scan, 900, 260);
+            hud.scanInfo.anchorMin = hud.scanInfo.anchorMax = new Vector2(.5f, 1);
+            hud.scanInfo.pivot = new Vector2(.5f, 1);
+            hud.scanInfo.anchoredPosition = new Vector2(0, -24);
+            Image("Backing", hud.scanInfo, 0, 0, 1, 1, null, WarmPalette.Cream);
+            Label("ScanTitle", hud.scanInfo, "СКАН КОМНАТЫ · ОТЛАДКА", .03f, .8f, .97f, .98f, 32, WarmPalette.Ink);
+            hud.scanCounts = Label("Counts", hud.scanInfo, "Поверхностей: 0", .03f, .4f, .97f, .78f, 28, WarmPalette.Ink);
+            hud.scanSource = Label("Source", hud.scanInfo, "Ожидание данных устройства", .03f, .05f, .97f, .37f, 25, WarmPalette.Ink);
+            hud.scanControls = Center("ScanControls", scan, 800, 250);
+            hud.scanControls.anchorMin = hud.scanControls.anchorMax = new Vector2(.5f, 0);
+            hud.scanControls.pivot = new Vector2(.5f, 0);
+            hud.scanControls.anchoredPosition = new Vector2(0, 28);
+            var hint = Image("ScanInstructions", hud.scanControls, 0, 1, 1, 1, null, WarmPalette.Cream).rectTransform;
+            hint.pivot = new Vector2(.5f, 0); hint.sizeDelta = new Vector2(0, 90); hint.anchoredPosition = new Vector2(0, 12);
+            hud.scanStatus = Label("Status", hint, "Медленно осмотри пол, стены и мебель камерой.", .03f, .12f, .97f, .88f, 28, WarmPalette.Ink);
+            hud.scanPauseButton = Button("PauseScan", hud.scanControls, "Зафиксировать", 0, .48f, 1, 1, upperButton, WarmPalette.Red, WarmPalette.Cream);
+            hud.scanPauseCaption = hud.scanPauseButton.GetComponentInChildren<TMP_Text>();
+            hud.scanResetButton = Button("ResetScan", hud.scanControls, "Заново", 0, 0, .48f, .43f, lowerButton, WarmPalette.Peach, WarmPalette.Ink);
+            hud.scanBackButton = Button("LeaveScan", hud.scanControls, "В меню", .52f, 0, 1, .43f, lowerButton, WarmPalette.Peach, WarmPalette.Ink);
+            modes.gameObject.SetActive(false);
+            scan.gameObject.SetActive(false);
 
             var play = Rect("Play HUD", safe, 0, 0, 1, 1);
             hud.playHud = play.gameObject;

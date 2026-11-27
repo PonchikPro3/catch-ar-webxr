@@ -1,0 +1,1 @@
+Passed in Editor with synthetic geometry: mode selection, scanner start, no falling objects; horizontal/vertical planes; pause freezes updates; removed planes cleared; two-hit stability; duplicate samples rejected; cap 256; reset. These are not physical room-scan results.

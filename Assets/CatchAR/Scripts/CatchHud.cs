@@ -13,6 +13,10 @@ namespace CatchAR
         public RectTransform timerRow, clockIcon, scoreRect, safeArea, menuStack, resultStack, placementStack, effects;
         public UnityEngine.UI.Button playButton, exitButton, replayButton, menuButton, placeButton;
         public Sprite touchBurst;
+        public GameObject modes, scanHud;
+        public RectTransform modeStack, scanControls, scanInfo;
+        public TMP_Text scanStatus, scanCounts, scanSource, scanPauseCaption;
+        public UnityEngine.UI.Button fallingModeButton, scanModeButton, modeBackButton, scanPauseButton, scanResetButton, scanBackButton;
         CatchGame game;
         int previousScore = -1, lastSecond = -1;
         float shownScore, scoreFrom, scoreAge = 1, tickAge = 1, noticeUntil;
@@ -20,7 +24,13 @@ namespace CatchAR
         public void Bind(CatchGame owner)
         {
             game = owner;
-            playButton.onClick.AddListener(game.StartAR);
+            playButton.onClick.AddListener(game.ShowModes);
+            fallingModeButton.onClick.AddListener(game.SelectFallingMode);
+            scanModeButton.onClick.AddListener(game.SelectRoomScanMode);
+            modeBackButton.onClick.AddListener(game.ReturnToMenu);
+            scanPauseButton.onClick.AddListener(game.scanner.TogglePause);
+            scanResetButton.onClick.AddListener(game.scanner.ResetScan);
+            scanBackButton.onClick.AddListener(game.ReturnToMenu);
             exitButton.onClick.AddListener(game.ExitGame);
             replayButton.onClick.AddListener(game.Restart);
             menuButton.onClick.AddListener(game.ReturnToMenu);
@@ -32,6 +42,9 @@ namespace CatchAR
             if (game == null) return;
             bool playing = game.Phase == GamePhase.Playing;
             menu.SetActive(game.Phase == GamePhase.Ready);
+            modes.SetActive(game.Phase == GamePhase.ModeSelection);
+            scanHud.SetActive(game.Phase == GamePhase.Scanning);
+            if (game.Phase == GamePhase.Scanning) RefreshScan();
             playHud.SetActive(playing || game.Phase == GamePhase.Countdown);
             result.SetActive(game.Phase == GamePhase.Result);
             placement.SetActive(game.Phase == GamePhase.Placing);
@@ -77,6 +90,28 @@ namespace CatchAR
             menuStack.sizeDelta = new Vector2(buttonWidth, buttonWidth * .82f);
             resultStack.sizeDelta = new Vector2(buttonWidth, buttonWidth * 1.12f);
             placementStack.sizeDelta = new Vector2(Mathf.Min(760, width * .9f), 340);
+            modeStack.sizeDelta = new Vector2(buttonWidth, buttonWidth * 1.16f);
+            scanControls.sizeDelta = new Vector2(Mathf.Min(800, width * .92f), 190);
+            scanInfo.sizeDelta = new Vector2(Mathf.Min(900, width * .92f), 210);
+        }
+
+        void RefreshScan()
+        {
+            var scan = game.scanner;
+            bool native = scan.Backend == "planes";
+            scanCounts.text = (native ? "Поверхностей: " : "Найденных участков: ") + scan.Count +
+                "\nГоризонтальных: " + scan.HorizontalCount + "  ·  Вертикальных: " + scan.VerticalCount;
+            scanSource.text = scan.Backend == "editor" ? "В редакторе нет данных AR — проверь на телефоне" :
+                native ? "Контуры: оранжевый — горизонталь, красный — вертикаль" :
+                "Hit-test: отдельные участки, полные границы недоступны";
+            scanStatus.text = scan.IsPaused ? "Скан зафиксирован. Можно осмотреть подсветку." :
+                scan.Unavailable ? "Браузер не предоставил сканирование поверхностей." :
+                scan.Backend == "editor" ? "Отладка скана · ожидание данных устройства" :
+                !scan.IsTracking ? "Ищем отслеживание. Медленно перемещай телефон." :
+                scan.AtLimit ? "Достигнут лимит участков. Зафиксируй скан или начни заново." :
+                "Медленно осмотри пол, стены и мебель камерой.";
+            scanPauseCaption.text = scan.IsPaused ? "Продолжить" : "Зафиксировать";
+            scanPauseButton.interactable = scan.IsPaused || (scan.Count > 0 && scan.IsTracking);
         }
 
         public void SetPlacement(bool found, bool fallbackAvailable)

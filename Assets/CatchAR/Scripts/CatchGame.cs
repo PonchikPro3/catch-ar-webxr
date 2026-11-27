@@ -7,7 +7,8 @@ using WebXR;
 
 namespace CatchAR
 {
-    public enum GamePhase { Ready, Placing, Countdown, Playing, Result }
+    public enum GamePhase { Ready, Placing, Countdown, Playing, Result, ModeSelection, Scanning }
+    public enum CatchMode { Falling, SurfaceScanDebug }
 
     public sealed class CatchGame : MonoBehaviour
     {
@@ -15,6 +16,8 @@ namespace CatchAR
         public WebXRCamera xrCamera;
         public WebXRController[] controllers;
         public CatchHud hud;
+        public RoomSurfaceScanner scanner;
+        public CatchMode SelectedMode { get; private set; }
         public CatchTarget targetPrefab;
         public Transform arena;
         public GameObject placementMarker;
@@ -66,6 +69,7 @@ namespace CatchAR
 
         void OnDisable()
         {
+            if (scanner != null) scanner.End();
             WebXRManager.OnXRChange -= XRChanged;
             WebXRManager.OnViewerHitTestUpdate -= HitUpdated;
             WebXRManager.OnVisibilityChange -= VisibilityChanged;
@@ -206,7 +210,8 @@ namespace CatchAR
         public void StartAR()
         {
 #if UNITY_EDITOR
-            StartDemo();
+            if (SelectedMode == CatchMode.SurfaceScanDebug) BeginRoomScan();
+            else StartDemo();
 #else
             if (WebXRManager.Instance == null || !WebXRManager.Instance.isSupportedAR)
             {
@@ -215,12 +220,14 @@ namespace CatchAR
             }
             hud.playButton.interactable = false;
             arRequestUntil = Time.unscaledTime + 8;
+            RoomSurfaceScanner.Configure(SelectedMode == CatchMode.SurfaceScanDebug);
             WebXRManager.Instance.ToggleAR();
 #endif
         }
 
         public void ExitGame()
         {
+            scanner.End();
             ClearTargets();
             if (IsAR) WebXRManager.Instance.ToggleAR();
 #if UNITY_WEBGL && !UNITY_EDITOR
@@ -235,6 +242,7 @@ namespace CatchAR
         public void StartDemo()
         {
             if (IsAR) return;
+            scanner.End();
             xrCamera.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
             GroundHeight = .13f;
             arena.SetPositionAndRotation(new Vector3(0, GroundHeight, 3), Quaternion.identity);
@@ -267,9 +275,21 @@ namespace CatchAR
 
         public void ReturnToMenu()
         {
+            scanner.End();
             ClearTargets();
             Phase = GamePhase.Ready;
             if (IsAR) WebXRManager.Instance.ToggleAR();
+        }
+
+        public void ShowModes() { Phase = GamePhase.ModeSelection; }
+        public void SelectFallingMode() { SelectedMode = CatchMode.Falling; Phase = GamePhase.Ready; StartAR(); }
+        public void SelectRoomScanMode() { SelectedMode = CatchMode.SurfaceScanDebug; Phase = GamePhase.Ready; StartAR(); }
+        void BeginRoomScan()
+        {
+            ClearTargets();
+            placementMarker.SetActive(false);
+            Phase = GamePhase.Scanning;
+            scanner.Begin(xrCamera.transform.parent);
         }
 
         void BeginCountdown()
@@ -366,11 +386,13 @@ namespace CatchAR
             arRequestUntil = 0;
             hud.playButton.interactable = true;
             ClearTargets();
+            scanner.End();
             phaseTime = 0;
             demoEnvironment.SetActive(state == WebXRState.NORMAL);
             placementMarker.SetActive(false);
             if (state == WebXRState.AR)
             {
+                if (SelectedMode == CatchMode.SurfaceScanDebug) { BeginRoomScan(); return; }
                 Phase = GamePhase.Placing;
                 lastHit = null;
                 WebXRManager.Instance.StartViewerHitTest();

@@ -199,6 +199,7 @@ namespace CatchAR.Editor
             game.audioSource.playOnAwake = false;
             game.catchSound = CreateSound();
             game.hud = CreateHud();
+            SpriteUiBuilder.ConfigureScanner(game);
             ConfigureGuidance(game);
             EditorSceneManager.SaveScene(scene, ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
@@ -211,7 +212,7 @@ namespace CatchAR.Editor
         {
             PlayerSettings.companyName = "AR Lab";
             PlayerSettings.productName = "Catch AR — Поймай объект";
-            PlayerSettings.bundleVersion = "1.4.1";
+            PlayerSettings.bundleVersion = "1.5.0";
             PlayerSettings.colorSpace = ColorSpace.Linear;
             PlayerSettings.runInBackground = true;
             PlayerSettings.defaultWebScreenWidth = 1280;
