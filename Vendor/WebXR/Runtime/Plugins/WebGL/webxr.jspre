@@ -434,7 +434,8 @@ void main()
         window.requestAnimationFrame( tempRender );
         navigator.xr.requestSession('immersive-ar', {
           requiredFeatures: thisXRMananger.gameModule.WebXR.Settings.ARRequiredReferenceSpace,
-          optionalFeatures: thisXRMananger.gameModule.WebXR.Settings.AROptionalFeatures
+          optionalFeatures: thisXRMananger.gameModule.WebXR.Settings.AROptionalFeatures,
+          depthSensing: thisXRMananger.gameModule.WebXR.Settings.CatchARDepthSensing ? {usagePreference: ["cpu-optimized"], dataFormatPreference: ["float32", "luminance-alpha"]} : undefined
         }).then(function (session) {
           session.isImmersive = true;
           session.isInSession = true;

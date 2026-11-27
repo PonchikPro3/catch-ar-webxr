@@ -6719,8 +6719,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u0422\u043E\u043B\u044C\u043A\u043E \u0433\u043E\u0440\u0438\u0437\u043E\u043D\u0442\u0430\u043B\u044C\u043D\u044B\u0435
-    \u043F\u043E\u0432\u0435\u0440\u0445\u043D\u043E\u0441\u0442\u0438"
+  m_text: "\u041E\u0436\u0438\u0434\u0430\u043D\u0438\u0435 \u0434\u0430\u043D\u043D\u044B\u0445
+    \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u0430"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f693baac2723018439844af7a448c9e6, type: 2}
   m_sharedMaterial: {fileID: -5748875492879998193, guid: f693baac2723018439844af7a448c9e6, type: 2}
@@ -8125,6 +8125,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: CatchAR.Runtime::CatchAR.RoomSurfaceScanner
   surfaceMaterial: {fileID: 2100000, guid: 91d20b2eb53d0d04bbfb613fca25e1e2, type: 2}
   lineMaterial: {fileID: 2100000, guid: 45383e39bce6da64d90893b3fbddec38, type: 2}
+  minimumSurfaceArea: 0.04
+  minimumSurfaceWidth: 0.2
 --- !u!1 &1428765876
 GameObject:
   m_ObjectHideFlags: 0
@@ -9302,9 +9304,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u0413\u043E\u0440\u0438\u0437\u043E\u043D\u0442\u0430\u043B\u044C\u043D\u044B\u0445
-    \u043F\u043E\u0432\u0435\u0440\u0445\u043D\u043E\u0441\u0442\u0435\u0439: 0\n\u0421\u0435\u0442\u043A\u0430
-    5 \xD7 5 \u0441\u043C"
+  m_text: "\u041F\u043E\u0432\u0435\u0440\u0445\u043D\u043E\u0441\u0442\u0435\u0439:
+    0"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f693baac2723018439844af7a448c9e6, type: 2}
   m_sharedMaterial: {fileID: -5748875492879998193, guid: f693baac2723018439844af7a448c9e6, type: 2}

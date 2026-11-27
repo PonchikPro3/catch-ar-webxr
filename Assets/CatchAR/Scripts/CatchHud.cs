@@ -98,19 +98,20 @@ namespace CatchAR
         void RefreshScan()
         {
             var scan = game.scanner;
-            bool native = scan.Backend == "planes";
-            scanCounts.text = (native ? "Горизонтальных поверхностей: " : "Найденных участков: ") + scan.Count + "\nСетка 5 × 5 см";
+            scanCounts.text = "Поверхностей: " + scan.SurfaceCount + " · ячеек: " + scan.Count + "\nСетка 5 × 5 см · кандидатов: " + scan.CandidateCount;
             scanSource.text = scan.Backend == "editor" ? "В редакторе нет данных AR — проверь на телефоне" :
-                native ? "Только горизонтальные поверхности · контуры WebXR" :
-                "Hit-test: подтверждённые ячейки, без полных границ";
+                scan.Backend == "coarse" ? "Браузер не даёт depth/mesh для проверки точной формы" :
+                scan.Backend == "depth" ? "Форма подтверждается глубиной в центре и углах ячейки" :
+                scan.Backend == "mesh" ? "Форма по mesh hit-test · без заполнения промежутков" : "Ожидание данных формы";
             scanStatus.text = scan.IsPaused ? "Скан зафиксирован. Можно осмотреть подсветку." :
                 scan.Unavailable ? "Браузер не предоставил сканирование поверхностей." :
                 scan.Backend == "editor" ? "Отладка скана · ожидание данных устройства" :
                 !scan.IsTracking ? "Ищем отслеживание. Медленно перемещай телефон." :
+                scan.Backend == "coarse" ? "Доступна лишь грубая плоскость. Неподтверждённая сетка скрыта." :
                 scan.AtLimit ? "Достигнут лимит участков. Зафиксируй скан или начни заново." :
-                "Наведи камеру на пол или стол. Двигай телефон медленно.";
+                "Проведи камерой по всей поверхности. Минимальный участок — 20 × 20 см.";
             scanPauseCaption.text = scan.IsPaused ? "Продолжить" : "Зафиксировать";
-            scanPauseButton.interactable = scan.IsPaused || (scan.Count > 0 && scan.IsTracking);
+            scanPauseButton.interactable = scan.IsPaused || (scan.Count > 0 && scan.IsTracking && scan.PrecisionAvailable);
         }
 
         public void SetPlacement(bool found, bool fallbackAvailable)
