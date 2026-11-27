@@ -99,17 +99,16 @@ namespace CatchAR
         {
             var scan = game.scanner;
             bool native = scan.Backend == "planes";
-            scanCounts.text = (native ? "Поверхностей: " : "Найденных участков: ") + scan.Count +
-                "\nГоризонтальных: " + scan.HorizontalCount + "  ·  Вертикальных: " + scan.VerticalCount;
+            scanCounts.text = (native ? "Горизонтальных поверхностей: " : "Найденных участков: ") + scan.Count + "\nСетка 5 × 5 см";
             scanSource.text = scan.Backend == "editor" ? "В редакторе нет данных AR — проверь на телефоне" :
-                native ? "Контуры: оранжевый — горизонталь, красный — вертикаль" :
-                "Hit-test: отдельные участки, полные границы недоступны";
+                native ? "Только горизонтальные поверхности · контуры WebXR" :
+                "Hit-test: подтверждённые ячейки, без полных границ";
             scanStatus.text = scan.IsPaused ? "Скан зафиксирован. Можно осмотреть подсветку." :
                 scan.Unavailable ? "Браузер не предоставил сканирование поверхностей." :
                 scan.Backend == "editor" ? "Отладка скана · ожидание данных устройства" :
                 !scan.IsTracking ? "Ищем отслеживание. Медленно перемещай телефон." :
                 scan.AtLimit ? "Достигнут лимит участков. Зафиксируй скан или начни заново." :
-                "Медленно осмотри пол, стены и мебель камерой.";
+                "Наведи камеру на пол или стол. Двигай телефон медленно.";
             scanPauseCaption.text = scan.IsPaused ? "Продолжить" : "Зафиксировать";
             scanPauseButton.interactable = scan.IsPaused || (scan.Count > 0 && scan.IsTracking);
         }

@@ -1,0 +1,1 @@
+Passed 1.5.1 (mock XR frames, not a room scan): horizontal-only native planes and hit tests; 10Hz hit sampling; feature configuration deduplicated; stable plane IDs; polygon and normal coordinate conversion; unsupported plane getter falls back to hit-test; tracking loss; source cancellation; RAF cleanup; original features restored.

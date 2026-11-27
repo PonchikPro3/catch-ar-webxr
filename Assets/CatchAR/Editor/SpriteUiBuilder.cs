@@ -167,7 +167,7 @@ namespace CatchAR.Editor
             hud.scanControls.anchoredPosition = new Vector2(0, 28);
             var hint = Image("ScanInstructions", hud.scanControls, 0, 1, 1, 1, null, WarmPalette.Cream).rectTransform;
             hint.pivot = new Vector2(.5f, 0); hint.sizeDelta = new Vector2(0, 90); hint.anchoredPosition = new Vector2(0, 12);
-            hud.scanStatus = Label("Status", hint, "Медленно осмотри пол, стены и мебель камерой.", .03f, .12f, .97f, .88f, 28, WarmPalette.Ink);
+            hud.scanStatus = Label("Status", hint, "Наведи камеру на пол или стол. Двигай телефон медленно.", .03f, .12f, .97f, .88f, 28, WarmPalette.Ink);
             hud.scanPauseButton = Button("PauseScan", hud.scanControls, "Зафиксировать", 0, .48f, 1, 1, upperButton, WarmPalette.Red, WarmPalette.Cream);
             hud.scanPauseCaption = hud.scanPauseButton.GetComponentInChildren<TMP_Text>();
             hud.scanResetButton = Button("ResetScan", hud.scanControls, "Заново", 0, 0, .48f, .43f, lowerButton, WarmPalette.Peach, WarmPalette.Ink);

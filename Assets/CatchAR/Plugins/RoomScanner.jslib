@@ -10,7 +10,7 @@ mergeInto(LibraryManager.library, {
     if (Module.catchARScanner) Module.catchARScanner.stop();
     var receiver = UTF8ToString(receiverPtr), session = Module.WebXR && Module.WebXR.xrSession;
     if (!session) return;
-    var state = { active: true, source: null, raf: null, last: -Infinity, ids: new WeakMap(), next: 1, error: false };
+    var state = { active: true, source: null, raf: null, last: -Infinity, backend: 'hits', ids: new WeakMap(), next: 1, error: false };
     Module.catchARScanner = state;
     state.stop = function () {
       state.active = false;
@@ -33,7 +33,7 @@ mergeInto(LibraryManager.library, {
     function tick(time, frame) {
       if (!state.active) return;
       state.raf = session.requestAnimationFrame(tick);
-      if (time - state.last < 250 || !session.refSpace) return;
+      if (time - state.last < (state.backend === 'planes' ? 250 : 100) || !session.refSpace) return;
       state.last = time;
       var packet = {backend:'hits', tracking:false, unavailable:false, planes:[], hits:[]};
       try {
@@ -48,13 +48,14 @@ mergeInto(LibraryManager.library, {
             var id = state.ids.get(plane);
             if (!id) { id = state.next++; state.ids.set(plane,id); }
             var m = pose.transform.matrix;
+            if (Math.abs(m[5]) < .98480775) return; // within 10 degrees of horizontal
             packet.planes.push({id:id, normal:{x:m[4],y:m[5],z:-m[6]}, points:Array.from(plane.polygon, function(p) {return world(m,p);})});
           });
         } else if (packet.tracking && state.source) {
           var hits = frame.getHitTestResults(state.source);
           if (hits.length) {
             var hit = hits[0].getPose(session.refSpace);
-            if (hit) {
+            if (hit && Math.abs(hit.transform.matrix[5]) >= .98480775) {
               var matrix = hit.transform.matrix;
               packet.hits.push({position:{x:matrix[12],y:matrix[13],z:-matrix[14]},normal:{x:matrix[4],y:matrix[5],z:-matrix[6]}});
             }
@@ -62,6 +63,7 @@ mergeInto(LibraryManager.library, {
         }
         packet.unavailable = packet.backend === 'hits' && state.error;
       } catch (error) { packet.tracking=false; }
+      state.backend = packet.backend;
       if (state.active) Module.SendMessage(receiver, 'ReceiveScanFrame', JSON.stringify(packet));
     }
     state.raf = session.requestAnimationFrame(tick);

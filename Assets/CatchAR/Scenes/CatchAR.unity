@@ -1924,7 +1924,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
-  m_AdditionalShaderChannelsFlag: 0
+  m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 0
@@ -2259,7 +2259,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -4025,7 +4025,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4289916415
   m_fontColor: {r: 1, g: 0.92941177, b: 0.69803923, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -4038,7 +4038,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -5605,7 +5605,7 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
+    rgba: 4280623947
   m_fontColor: {r: 0.29411766, g: 0.13725491, b: 0.14509805, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
@@ -5618,7 +5618,7 @@ MonoBehaviour:
   m_spriteAsset: {fileID: 0}
   m_tintAllSprites: 0
   m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: 0
+  m_TextStyleHashCode: -1183493901
   m_overrideHtmlColors: 0
   m_faceColor:
     serializedVersion: 2
@@ -6719,8 +6719,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u041E\u0436\u0438\u0434\u0430\u043D\u0438\u0435 \u0434\u0430\u043D\u043D\u044B\u0445
-    \u0443\u0441\u0442\u0440\u043E\u0439\u0441\u0442\u0432\u0430"
+  m_text: "\u0422\u043E\u043B\u044C\u043A\u043E \u0433\u043E\u0440\u0438\u0437\u043E\u043D\u0442\u0430\u043B\u044C\u043D\u044B\u0435
+    \u043F\u043E\u0432\u0435\u0440\u0445\u043D\u043E\u0441\u0442\u0438"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f693baac2723018439844af7a448c9e6, type: 2}
   m_sharedMaterial: {fileID: -5748875492879998193, guid: f693baac2723018439844af7a448c9e6, type: 2}
@@ -7394,9 +7394,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u041C\u0435\u0434\u043B\u0435\u043D\u043D\u043E \u043E\u0441\u043C\u043E\u0442\u0440\u0438
-    \u043F\u043E\u043B, \u0441\u0442\u0435\u043D\u044B \u0438 \u043C\u0435\u0431\u0435\u043B\u044C
-    \u043A\u0430\u043C\u0435\u0440\u043E\u0439."
+  m_text: "\u041D\u0430\u0432\u0435\u0434\u0438 \u043A\u0430\u043C\u0435\u0440\u0443
+    \u043D\u0430 \u043F\u043E\u043B \u0438\u043B\u0438 \u0441\u0442\u043E\u043B.
+    \u0414\u0432\u0438\u0433\u0430\u0439 \u0442\u0435\u043B\u0435\u0444\u043E\u043D
+    \u043C\u0435\u0434\u043B\u0435\u043D\u043D\u043E."
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f693baac2723018439844af7a448c9e6, type: 2}
   m_sharedMaterial: {fileID: -5748875492879998193, guid: f693baac2723018439844af7a448c9e6, type: 2}
@@ -9301,8 +9302,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u041F\u043E\u0432\u0435\u0440\u0445\u043D\u043E\u0441\u0442\u0435\u0439:
-    0"
+  m_text: "\u0413\u043E\u0440\u0438\u0437\u043E\u043D\u0442\u0430\u043B\u044C\u043D\u044B\u0445
+    \u043F\u043E\u0432\u0435\u0440\u0445\u043D\u043E\u0441\u0442\u0435\u0439: 0\n\u0421\u0435\u0442\u043A\u0430
+    5 \xD7 5 \u0441\u043C"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f693baac2723018439844af7a448c9e6, type: 2}
   m_sharedMaterial: {fileID: -5748875492879998193, guid: f693baac2723018439844af7a448c9e6, type: 2}
