@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
+using System.Runtime.InteropServices;
 using WebXR;
 
 namespace CatchAR
@@ -47,6 +48,10 @@ namespace CatchAR
         float hitTime, phaseTime, nextSpawn, lastCatch = -100;
         int spawned, lastActionFrame = -1;
         bool visible = true;
+        float arRequestUntil;
+#if UNITY_WEBGL && !UNITY_EDITOR
+        [DllImport("__Internal")] static extern void CatchARQuit();
+#endif
         bool GroundHitAvailable => lastHit != null && lastHit.available && Time.unscaledTime - hitTime < .5f &&
             Vector3.Dot(lastHit.rotation * Vector3.up, Vector3.up) > .8f;
 
@@ -76,6 +81,12 @@ namespace CatchAR
         {
             if (!visible) return;
             phaseTime += Time.deltaTime;
+            if (arRequestUntil > 0 && Time.unscaledTime >= arRequestUntil)
+            {
+                arRequestUntil = 0;
+                hud.playButton.interactable = true;
+                if (!IsAR) hud.ShowMenuNotice("AR не запустилась. Разреши доступ к камере и попробуй ещё раз.");
+            }
             if (Phase == GamePhase.Placing)
             {
                 bool found = GroundHitAvailable;
@@ -116,16 +127,18 @@ namespace CatchAR
             {
                 int id = Touchscreen.current.primaryTouch.touchId.ReadValue();
                 if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(id)) return;
-                Act(ViewCamera.ScreenPointToRay(Touchscreen.current.primaryTouch.position.ReadValue()));
+                Vector2 point = Touchscreen.current.primaryTouch.position.ReadValue();
+                Act(ViewCamera.ScreenPointToRay(point), point);
             }
             else if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
             {
                 if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
-                Act(ViewCamera.ScreenPointToRay(Mouse.current.position.ReadValue()));
+                Vector2 point = Mouse.current.position.ReadValue();
+                Act(ViewCamera.ScreenPointToRay(point), point);
             }
         }
 
-        public void Act(Ray ray)
+        public void Act(Ray ray, Vector2? screenPoint = null)
         {
             if (lastActionFrame == Time.frameCount) return;
             lastActionFrame = Time.frameCount;
@@ -134,12 +147,43 @@ namespace CatchAR
             if (Phase == GamePhase.Result && phaseTime > 1) { BeginCountdown(); return; }
             if (Phase != GamePhase.Playing) return;
             if (Physics.Raycast(ray, out RaycastHit hit, 12) && hit.collider.TryGetComponent(out CatchTarget target))
+            {
+                hud.ShowCatchEffect(screenPoint ?? (Vector2)ViewCamera.WorldToScreenPoint(hit.point));
                 target.Catch();
+            }
             else
             {
                 Combo = 0;
-                hud.Flash("МИМО · ПОПРОБУЙ ЕЩЁ", false);
             }
+        }
+
+        public void StartAR()
+        {
+#if UNITY_EDITOR
+            StartDemo();
+#else
+            if (WebXRManager.Instance == null || !WebXRManager.Instance.isSupportedAR)
+            {
+                hud.ShowMenuNotice("Для AR открой игру на телефоне с поддержкой WebXR и ARCore.");
+                return;
+            }
+            hud.playButton.interactable = false;
+            arRequestUntil = Time.unscaledTime + 8;
+            WebXRManager.Instance.ToggleAR();
+#endif
+        }
+
+        public void ExitGame()
+        {
+            ClearTargets();
+            if (IsAR) WebXRManager.Instance.ToggleAR();
+#if UNITY_WEBGL && !UNITY_EDITOR
+            CatchARQuit();
+#elif UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
         }
 
         public void StartDemo()
@@ -238,7 +282,6 @@ namespace CatchAR
             int points = (target.IsGold ? 25 : 10) * Combo;
             Score += points;
             Caught++;
-            hud.Flash($"+{points}  " + (Combo > 1 ? $"СЕРИЯ ×{Combo}" : "ПОЙМАНО!"), true);
             if (audioSource != null && catchSound != null)
             {
                 audioSource.pitch = 1 + Combo * .08f;
@@ -274,6 +317,8 @@ namespace CatchAR
 
         void XRChanged(WebXRState state, int count, Rect left, Rect right)
         {
+            arRequestUntil = 0;
+            hud.playButton.interactable = true;
             ClearTargets();
             phaseTime = 0;
             demoEnvironment.SetActive(state == WebXRState.NORMAL);

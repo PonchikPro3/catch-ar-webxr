@@ -1,0 +1,18 @@
+UI 1.4 verification — 27 November 2026
+Unity 6000.3.11f1; uGUI 2.0.0; existing Canvas/Input System retained.
+Passed in Play Mode at native 390x844:
+- Exactly two start-menu buttons, one EventSystem, InputSystemUIInputModule, GraphicRaycaster.
+- Actual UnityEngine.UI.Slider with positive fill dimensions and CanvasRenderer; it does not intercept touches.
+- Score alone beneath the timer; score animation observed at scale 1.198 while counting to the awarded total.
+- A real raycast catch awards points and creates one Graphic containing all three strokes.
+- Touch effect screen position exactly matches supplied position: (195,422) -> (195,422).
+- Animated burst observed from scale 0.22 to 1.121 with alpha 1 before fade; visual capture catch-phone.png.
+- Plane-scanning placement button disabled; found-plane state enables it and shows instruction.
+- End-of-round display and replay reset work; menu returns to exactly two buttons.
+- HUD reviewed over dark scene and a light camera background; score outline preserves readability.
+Review 1: fixed cross-contamination between sprite crops; enabled actual fill rendering.
+Review 2: mapped grey button faces into the requested palette, retained illustrated rims; reviewed fresh menu, HUD, placement and result captures.
+Temporary review code and captures are in Temp/UIReview, outside Assets. Previous Game View size was restored.
+Console after fixes: no compile errors or new runtime errors. Earlier two authoring errors came from an unsupported Sprite.OverrideGeometry call, which was removed.
+Docs read: installed uGUI UICanvas.md, CanvasScaler, UIBasicLayout, Slider, Image, EventSystem and GraphicRaycaster; Pipeline scripts/capture/wait; Unity 6000.3 Sprite.Create and Sprite.OverrideGeometry references.
+Physical AR camera and controller use require a WebXR device; Editor preview and browser compatibility/exit paths are checked separately.

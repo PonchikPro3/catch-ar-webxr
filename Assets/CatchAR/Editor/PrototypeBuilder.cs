@@ -38,7 +38,7 @@ namespace CatchAR.Editor
             AssetDatabase.SaveAssets();
         }
 
-        static void ConfigureGuidance(CatchGame game)
+        internal static void ConfigureGuidance(CatchGame game)
         {
             var safe = game.hud.transform.Find("Safe Area");
             if (safe == null) throw new Exception("Safe Area UI is missing");
@@ -211,7 +211,7 @@ namespace CatchAR.Editor
         {
             PlayerSettings.companyName = "AR Lab";
             PlayerSettings.productName = "Catch AR — Поймай объект";
-            PlayerSettings.bundleVersion = "1.3.1";
+            PlayerSettings.bundleVersion = "1.4.0";
             PlayerSettings.colorSpace = ColorSpace.Linear;
             PlayerSettings.runInBackground = true;
             PlayerSettings.defaultWebScreenWidth = 1280;
@@ -434,72 +434,7 @@ namespace CatchAR.Editor
 
         static CatchHud CreateHud()
         {
-            var canvasGo = new GameObject("Game UI", typeof(Canvas), typeof(UnityEngine.UI.CanvasScaler), typeof(UnityEngine.UI.GraphicRaycaster));
-            canvasGo.GetComponent<Canvas>().renderMode = RenderMode.ScreenSpaceOverlay;
-            var scaler = canvasGo.GetComponent<UnityEngine.UI.CanvasScaler>();
-            scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1080, 1080);
-            scaler.matchWidthOrHeight = .5f;
-            var safe = Rect("Safe Area", canvasGo.transform, 0, 0, 1, 1);
-            safe.gameObject.AddComponent<SafeArea>();
-            var hud = canvasGo.AddComponent<CatchHud>();
-            new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
-
-            Label("Brand", safe, "CATCH / AR", .04f, .915f, .52f, .98f, 28, Mint, TextAlignmentOptions.MidlineLeft);
-            Label("Edition", safe, "МИНИ-ИГРА В ТВОЁМ МИРЕ", .53f, .915f, .96f, .98f, 15, Muted, TextAlignmentOptions.MidlineRight);
-            var menu = Panel("Welcome", safe, .08f, .12f, .92f, .87f, Navy);
-            hud.menu = menu.gameObject;
-            Label("Eyebrow", menu, "01 / РЕАЛЬНОСТЬ СТАНОВИТСЯ ИГРОЙ", .07f, .86f, .93f, .94f, 19, Mint);
-            Label("Title", menu, "Поймай\nмомент.", .07f, .58f, .93f, .85f, 84, Color.white);
-            Label("Description", menu, "Лови падающие объекты вокруг себя.\nНе дай им долететь до земли!", .07f, .43f, .93f, .57f, 29, Muted);
-            hud.playButton = Button("Demo", menu, "ИГРАТЬ В ДЕМО   →", .07f, .25f, .93f, .39f);
-            Label("Rules", menu, "Обычный: +10  ·  Золотой: +25\nБыстрые поимки дают серию до ×5", .07f, .10f, .93f, .22f, 22, Muted);
-            hud.bestText = Label("Best", menu, "ЛИЧНЫЙ РЕКОРД  0", .07f, .025f, .93f, .09f, 17, Mint);
-
-            var play = Rect("Play HUD", safe, 0, 0, 1, .91f);
-            hud.playHud = play.gameObject;
-            var scoreCard = Panel("Score Card", play, .04f, .79f, .32f, .98f, Navy);
-            Label("Score Label", scoreCard, "СЧЁТ", .08f, .63f, .92f, .92f, 18, Muted);
-            hud.score = Label("Score", scoreCard, "000", .08f, .04f, .92f, .66f, 58, Color.white);
-            var timeCard = Panel("Time Card", play, .70f, .79f, .96f, .98f, Navy);
-            Label("Time Label", timeCard, "ОСТАЛОСЬ", .08f, .63f, .92f, .92f, 18, Muted);
-            hud.timer = Label("Time", timeCard, "60с", .08f, .04f, .92f, .66f, 58, Color.white);
-            hud.combo = Label("Combo", play, "ЛОВИ БЫСТРЕЕ", .34f, .86f, .68f, .96f, 20, Mint);
-            Panel("Time Track", play, .04f, .763f, .96f, .77f, new Color(.15f, .22f, .26f, .7f));
-            var fill = Panel("Time Fill", play, .04f, .763f, .96f, .77f, Mint).GetComponent<UnityEngine.UI.Image>();
-            // A built-in white UI sprite enables Image.Type.Filled on all platforms.
-            fill.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
-            fill.type = UnityEngine.UI.Image.Type.Filled;
-            fill.fillMethod = UnityEngine.UI.Image.FillMethod.Horizontal;
-            fill.fillOrigin = 0;
-            hud.timeBar = fill;
-            hud.status = Label("Mode", play, "● ДЕМО", .04f, .04f, .96f, .10f, 18, Mint);
-            Label("Hint", play, "НАЖИМАЙ НА ОБЪЕКТЫ ДО КАСАНИЯ ЗЕМЛИ", .04f, .105f, .96f, .17f, 18, Color.white);
-            hud.flash = Label("Feedback", play, "+10 ПОЙМАНО!", .15f, .57f, .85f, .67f, 32, Mint);
-
-            var countdown = Rect("Countdown", safe, .25f, .32f, .75f, .67f);
-            hud.countdown = countdown.gameObject;
-            hud.countdownText = Label("Number", countdown, "3", 0, .15f, 1, 1, 180, Mint);
-            Label("Get Ready", countdown, "ПРИГОТОВЬСЯ", 0, 0, 1, .2f, 24, Color.white);
-            var placement = Panel("Placement", safe, .06f, .09f, .94f, .40f, Navy);
-            hud.placement = placement.gameObject;
-            hud.placementText = Label("Instruction", placement, "НАВЕДИ КАМЕРУ НА ПОВЕРХНОСТЬ", .05f, .42f, .95f, .94f, 28, Color.white);
-            hud.placeButton = Button("Place", placement, "РАЗМЕСТИТЬ ЗОНУ ИГРЫ", .05f, .08f, .95f, .36f);
-
-            var result = Panel("Result", safe, .08f, .12f, .92f, .87f, Navy);
-            hud.result = result.gameObject;
-            Label("Round Over", result, "РАУНД ЗАВЕРШЁН", .07f, .85f, .93f, .94f, 23, Mint);
-            Label("Result Caption", result, "ТВОЙ СЧЁТ", .07f, .73f, .93f, .82f, 23, Muted);
-            hud.resultScore = Label("Result Score", result, "0", .07f, .48f, .93f, .74f, 130, Color.white);
-            hud.resultDetails = Label("Details", result, "", .07f, .34f, .93f, .48f, 25, Muted);
-            hud.replayButton = Button("Replay", result, "ЕЩЁ ОДИН РАУНД   →", .07f, .17f, .93f, .30f);
-            hud.menuButton = Button("Menu", result, "В МЕНЮ", .07f, .03f, .93f, .14f, true);
-            Label("Footer", safe, "СВОБОДНОЕ МЕСТО ВОКРУГ ТЕБЯ — ЛУЧШАЯ ИГРОВАЯ ЗОНА", .04f, .015f, .96f, .065f, 15, Muted);
-            play.gameObject.SetActive(false);
-            result.gameObject.SetActive(false);
-            placement.gameObject.SetActive(false);
-            countdown.gameObject.SetActive(false);
-            return hud;
+            return SpriteUiBuilder.CreateHud(font);
         }
 
         static RectTransform Rect(string name, Transform parent, float x0, float y0, float x1, float y1)
@@ -606,3 +541,4 @@ namespace CatchAR.Editor
         }
     }
 }
+

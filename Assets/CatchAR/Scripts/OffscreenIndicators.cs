@@ -11,8 +11,8 @@ namespace CatchAR
         public float spacing = 49;
         public int VisibleCount { get; private set; }
         Vector2[] positions;
-        static readonly Color Mint = new Color(.48f, 1, .76f);
-        static readonly Color Gold = new Color(1, .66f, .22f);
+        static readonly Color Mint = WarmPalette.Orange;
+        static readonly Color Gold = WarmPalette.Cream;
 
         void LateUpdate() { RefreshIndicators(); }
 

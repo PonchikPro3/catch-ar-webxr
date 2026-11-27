@@ -75,18 +75,8 @@ namespace CatchAR
             if (resolved) return;
             resolved = true;
             game.RegisterCatch(this);
-            // Small reusable-looking shards give immediate spatial feedback without textures.
-            for (int i = 0; i < 8; i++)
-            {
-                var shard = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                shard.name = "Catch sparkle";
-                Destroy(shard.GetComponent<Collider>());
-                shard.transform.position = transform.position;
-                shard.transform.localScale = Vector3.one * .025f;
-                shard.GetComponent<Renderer>().sharedMaterial = IsGold ? goldMaterial : mintMaterial;
-                shard.AddComponent<CatchSpark>().velocity = Random.onUnitSphere * .55f;
-            }
             Destroy(gameObject);
         }
     }
 }
+
