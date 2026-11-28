@@ -16,6 +16,36 @@ namespace CatchAR.Editor
         static Sprite frame, clock, upperButton, lowerButton, burst;
         static Material hudType, buttonMaterial;
 
+        public static void ConfigureScanProgress(CatchHud hud)
+        {
+            if (hud == null || hud.scanInfo == null || hud.scanCounts == null || hud.scanSource == null)
+                throw new Exception("Scan HUD references are missing");
+            if (hud.scanProgress == null)
+            {
+                var bar = Rect("ScanProgress", hud.scanInfo, .07f, .37f, .93f, .49f);
+                var back = Rect("Track", bar, 0, 0, 1, 1).gameObject.AddComponent<TimerFillGraphic>();
+                back.color = WarmPalette.Peach; back.raycastTarget = false;
+                var area = Rect("FillArea", bar, .012f, .12f, .988f, .88f);
+                var fill = Rect("Fill", area, 0, 0, 1, 1).gameObject.AddComponent<TimerFillGraphic>();
+                fill.color = WarmPalette.Red; fill.raycastTarget = false;
+                hud.scanProgress = bar.gameObject.AddComponent<UnityEngine.UI.Slider>();
+                hud.scanProgress.fillRect = fill.rectTransform;
+                hud.scanProgress.interactable = false;
+                hud.scanProgress.transition = UnityEngine.UI.Selectable.Transition.None;
+                hud.scanProgress.navigation = new UnityEngine.UI.Navigation { mode = UnityEngine.UI.Navigation.Mode.None };
+            }
+            hud.scanProgress.SetValueWithoutNotify(0);
+            var count = hud.scanCounts.rectTransform;
+            count.anchorMin = new Vector2(.03f, .54f); count.anchorMax = new Vector2(.97f, .79f);
+            count.offsetMin = count.offsetMax = Vector2.zero;
+            hud.scanCounts.text = "0 / 8 поверхностей";
+            var source = hud.scanSource.rectTransform;
+            source.anchorMin = new Vector2(.03f, .04f); source.anchorMax = new Vector2(.97f, .29f);
+            source.offsetMin = source.offsetMax = Vector2.zero;
+            hud.scanInfo.sizeDelta = new Vector2(hud.scanInfo.sizeDelta.x, 280);
+            EditorUtility.SetDirty(hud);
+        }
+
         [MenuItem("Catch AR/Apply sprite UI")]
         public static void Apply()
         {
@@ -161,6 +191,7 @@ namespace CatchAR.Editor
             Label("ScanTitle", hud.scanInfo, "СКАН КОМНАТЫ · ОТЛАДКА", .03f, .8f, .97f, .98f, 32, WarmPalette.Ink);
             hud.scanCounts = Label("Counts", hud.scanInfo, "Поверхностей: 0", .03f, .4f, .97f, .78f, 28, WarmPalette.Ink);
             hud.scanSource = Label("Source", hud.scanInfo, "Ожидание данных устройства", .03f, .05f, .97f, .37f, 25, WarmPalette.Ink);
+            ConfigureScanProgress(hud);
             hud.scanControls = Center("ScanControls", scan, 800, 250);
             hud.scanControls.anchorMin = hud.scanControls.anchorMax = new Vector2(.5f, 0);
             hud.scanControls.pivot = new Vector2(.5f, 0);

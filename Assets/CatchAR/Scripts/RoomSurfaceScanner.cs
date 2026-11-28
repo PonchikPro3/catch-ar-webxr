@@ -27,6 +27,10 @@ namespace CatchAR
         public int HorizontalCount { get; private set; }
         public int VerticalCount { get; private set; }
         public bool AtLimit => Count >= MaxSamples;
+        public const int RequiredSurfaces = 8;
+        public int SurfaceCount { get; private set; }
+        public bool IsComplete { get; private set; }
+        public float Progress => Mathf.Clamp01((float)SurfaceCount / RequiredSurfaces);
         readonly Dictionary<int, Region> regions = new Dictionary<int, Region>();
         readonly List<int> remove = new List<int>();
         Transform origin;
@@ -87,7 +91,7 @@ namespace CatchAR
         void OnDisable() { End(); }
         public void TogglePause()
         {
-            if (!IsRunning || (Count == 0 && !IsPaused)) return;
+            if (!IsRunning || IsComplete || (Count == 0 && !IsPaused)) return;
             IsPaused = !IsPaused;
         }
         public void ResetScan()
@@ -102,6 +106,8 @@ namespace CatchAR
             sampleFill=sampleLines=null; sampleRoot=null; samplesDirty=false;
             regions.Clear();
             HorizontalCount = VerticalCount = 0;
+            SurfaceCount = 0;
+            IsComplete = false;
             hitWindow.Clear();
             nextSample = -1;
         }
@@ -162,6 +168,43 @@ namespace CatchAR
             }
             else hitWindow.Clear();
             Recount();
+            RecountSurfaces();
+            if (SurfaceCount >= RequiredSurfaces) { IsComplete = true; IsPaused = true; }
+        }
+        void RecountSurfaces()
+        {
+            if (Backend == "planes") { SurfaceCount = Count; return; }
+            // Hit-test returns cells rather than plane identities. Count connected
+            // coplanar patches, keeping different height layers separate.
+            var cells = new Dictionary<Vector2Int, List<Region>>();
+            foreach (var r in regions.Values)
+            {
+                if (!cells.TryGetValue(r.cell, out var list)) { list = new List<Region>(); cells.Add(r.cell, list); }
+                list.Add(r);
+            }
+            SurfaceCount = 0;
+            var visited = new HashSet<Region>();
+            var queue = new Queue<Region>();
+            var offsets = new[] { Vector2Int.left, Vector2Int.right, Vector2Int.up, Vector2Int.down };
+            foreach (var seed in regions.Values)
+            {
+                if (!visited.Add(seed)) continue;
+                SurfaceCount++; queue.Enqueue(seed);
+                while (queue.Count > 0)
+                {
+                    var r = queue.Dequeue();
+                    foreach (var offset in offsets)
+                    {
+                        if (!cells.TryGetValue(r.cell + offset, out var neighbours)) continue;
+                        foreach (var b in neighbours)
+                        {
+                            if (visited.Contains(b) || Vector3.Dot(r.normal, b.normal) < .9961947f ||
+                                Mathf.Abs(Vector3.Dot(r.normal, b.center - r.center)) > .025f) continue;
+                            visited.Add(b); queue.Enqueue(b);
+                        }
+                    }
+                }
+            }
         }
         void AddSample(Vector3 point, Vector3 normal)
         {

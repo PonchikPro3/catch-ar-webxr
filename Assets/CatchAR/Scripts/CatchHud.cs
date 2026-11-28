@@ -16,6 +16,7 @@ namespace CatchAR
         public GameObject modes, scanHud;
         public RectTransform modeStack, scanControls, scanInfo;
         public TMP_Text scanStatus, scanCounts, scanSource, scanPauseCaption;
+        public UnityEngine.UI.Slider scanProgress;
         public UnityEngine.UI.Button fallingModeButton, scanModeButton, modeBackButton, scanPauseButton, scanResetButton, scanBackButton;
         CatchGame game;
         int previousScore = -1, lastSecond = -1;
@@ -92,25 +93,27 @@ namespace CatchAR
             placementStack.sizeDelta = new Vector2(Mathf.Min(760, width * .9f), 340);
             modeStack.sizeDelta = new Vector2(buttonWidth, buttonWidth * 1.16f);
             scanControls.sizeDelta = new Vector2(Mathf.Min(800, width * .92f), 190);
-            scanInfo.sizeDelta = new Vector2(Mathf.Min(900, width * .92f), 210);
+            scanInfo.sizeDelta = new Vector2(Mathf.Min(900, width * .92f), 280);
         }
 
         void RefreshScan()
         {
             var scan = game.scanner;
             bool native = scan.Backend == "planes";
-            scanCounts.text = (native ? "Горизонтальных поверхностей: " : "Найденных участков: ") + scan.Count + "\nСетка 5 × 5 см";
+            scanCounts.text = Mathf.Min(scan.SurfaceCount, RoomSurfaceScanner.RequiredSurfaces) + " / " + RoomSurfaceScanner.RequiredSurfaces + " поверхностей";
+            if (scanProgress != null) scanProgress.SetValueWithoutNotify(scan.Progress);
             scanSource.text = scan.Backend == "editor" ? "В редакторе нет данных AR — проверь на телефоне" :
                 native ? "Только горизонтальные поверхности · контуры WebXR" :
-                "Hit-test: подтверждённые ячейки, без полных границ";
-            scanStatus.text = scan.IsPaused ? "Скан зафиксирован. Можно осмотреть подсветку." :
+                "Hit-test: соседние ячейки объединяются в участки";
+            scanStatus.text = scan.IsComplete ? "Сканирование завершено! Найдено 8 поверхностей." :
+                scan.IsPaused ? "Скан зафиксирован. Можно осмотреть подсветку." :
                 scan.Unavailable ? "Браузер не предоставил сканирование поверхностей." :
                 scan.Backend == "editor" ? "Отладка скана · ожидание данных устройства" :
                 !scan.IsTracking ? "Ищем отслеживание. Медленно перемещай телефон." :
                 scan.AtLimit ? "Достигнут лимит участков. Зафиксируй скан или начни заново." :
                 "Наведи камеру на пол или стол. Двигай телефон медленно.";
-            scanPauseCaption.text = scan.IsPaused ? "Продолжить" : "Зафиксировать";
-            scanPauseButton.interactable = scan.IsPaused || (scan.Count > 0 && scan.IsTracking);
+            scanPauseCaption.text = scan.IsComplete ? "Скан завершён" : scan.IsPaused ? "Продолжить" : "Зафиксировать";
+            scanPauseButton.interactable = !scan.IsComplete && (scan.IsPaused || (scan.Count > 0 && scan.IsTracking));
         }
 
         public void SetPlacement(bool found, bool fallbackAvailable)
