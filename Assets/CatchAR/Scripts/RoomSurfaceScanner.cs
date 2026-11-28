@@ -99,6 +99,34 @@ namespace CatchAR
             ClearGeometry();
             IsPaused = false;
         }
+        public void HideGeometry() { if (visualRoot != null) visualRoot.SetActive(false); }
+        public bool TryGetRandomSurfacePoint(out Vector3 point, out Vector3 normal)
+        {
+            point = normal = Vector3.zero;
+            Vector3 a = Vector3.zero, b = a, c = a;
+            float total = 0;
+            foreach (var region in regions.Values)
+            {
+                if (region.points == null) continue;
+                for (int i = 1; i + 1 < region.points.Length; i++)
+                {
+                    Vector3 p = origin.TransformPoint(region.points[0]);
+                    Vector3 q = origin.TransformPoint(region.points[i]);
+                    Vector3 r = origin.TransformPoint(region.points[i + 1]);
+                    float area = Vector3.Cross(q - p, r - p).magnitude * .5f;
+                    if (area <= .000001f) continue;
+                    total += area;
+                    if (UnityEngine.Random.value * total > area) continue;
+                    a = p; b = q; c = r;
+                    normal = origin.TransformDirection(region.normal).normalized;
+                }
+            }
+            if (total <= 0) return false;
+            float u = Mathf.Sqrt(UnityEngine.Random.value), v = UnityEngine.Random.value;
+            point = (1 - u) * a + u * (1 - v) * b + u * v * c;
+            if (Vector3.Dot(normal, Vector3.up) < 0) normal = -normal;
+            return true;
+        }
         void ClearGeometry()
         {
             foreach (var region in regions.Values) { Destroy(region.mesh); Destroy(region.grid); Destroy(region.root); }
@@ -254,6 +282,7 @@ namespace CatchAR
                 regions.Add(id, region);
             }
             region.center = Vector3.zero;
+            region.points = points;
             region.normal = normal;
             var vertices = new Vector3[points.Length];
             for (int i = 0; i < points.Length; i++) { region.center += points[i]; vertices[i] = points[i] + normal * .004f; }

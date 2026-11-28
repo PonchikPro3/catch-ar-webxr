@@ -40,6 +40,9 @@ namespace CatchAR
         public int Combo { get; private set; }
         public float Remaining { get; private set; }
         public int Best { get; private set; }
+        public const int SurfaceCatchGoal = 10;
+        public bool IsSurfaceMode => SelectedMode == CatchMode.SurfaceScanDebug;
+        public float Elapsed { get; private set; }
         public bool IsAR => WebXRManager.Instance != null && WebXRManager.Instance.XRState == WebXRState.AR;
         public int ActiveTargets => targets.Count;
         public IReadOnlyList<CatchTarget> Targets => targets;
@@ -107,14 +110,28 @@ namespace CatchAR
                 phaseTime = 0;
                 nextSpawn = 0;
             }
+            if (Phase == GamePhase.Scanning && scanner.IsComplete) BeginCountdown();
             if (Phase == GamePhase.Playing)
             {
-                Remaining = Mathf.Max(0, Remaining - Time.deltaTime);
-                if (Remaining <= 0) EndRound();
-                else if (Time.time >= nextSpawn && targets.Count < maxTargets)
+                if (IsSurfaceMode)
                 {
-                    SpawnTarget();
-                    nextSpawn = Time.time + Mathf.Lerp(1.05f, .60f, 1 - Remaining / roundDuration);
+                    Elapsed += Time.deltaTime;
+                    if (Time.time >= nextSpawn)
+                    {
+                        while (targets.Count < 3 && Caught + targets.Count < SurfaceCatchGoal)
+                            if (!SpawnSurfaceTarget()) break;
+                        nextSpawn = Time.time + .2f;
+                    }
+                }
+                else
+                {
+                    Remaining = Mathf.Max(0, Remaining - Time.deltaTime);
+                    if (Remaining <= 0) EndRound();
+                    else if (Time.time >= nextSpawn && targets.Count < maxTargets)
+                    {
+                        SpawnTarget();
+                        nextSpawn = Time.time + Mathf.Lerp(1.05f, .60f, 1 - Remaining / roundDuration);
+                    }
                 }
             }
             hud.Refresh(phaseTime);
@@ -177,7 +194,7 @@ namespace CatchAR
             lastActionFrame = Time.frameCount;
             if (Phase == GamePhase.Placing) { PlaceArena(); return; }
             // A select after the result starts another round even on headsets without mouse UI.
-            if (Phase == GamePhase.Result && phaseTime > 1) { BeginCountdown(); return; }
+            if (Phase == GamePhase.Result && phaseTime > 1) { Restart(); return; }
             if (Phase != GamePhase.Playing) return;
             CatchTarget selected = null;
             float closest = float.PositiveInfinity;
@@ -269,6 +286,12 @@ namespace CatchAR
 
         public void Restart()
         {
+            if (IsSurfaceMode)
+            {
+                if (scanner.IsComplete && scanner.Count > 0) BeginCountdown();
+                else BeginRoomScan();
+                return;
+            }
             if (IsAR) BeginCountdown();
             else StartDemo();
         }
@@ -297,6 +320,8 @@ namespace CatchAR
             ClearTargets();
             Score = Caught = Missed = Combo = spawned = 0;
             Remaining = roundDuration;
+            Elapsed = 0;
+            if (IsSurfaceMode) scanner.HideGeometry();
             lastCatch = -100;
             Phase = GamePhase.Countdown;
             phaseTime = 0;
@@ -346,13 +371,34 @@ namespace CatchAR
             Combo = Time.time - lastCatch < 1.8f ? Mathf.Min(Combo + 1, 5) : 1;
             lastCatch = Time.time;
             int points = (target.IsGold ? 25 : 10) * Combo;
-            Score += points;
             Caught++;
+            if (IsSurfaceMode) Score = Caught;
+            else Score += points;
             if (audioSource != null && catchSound != null)
             {
                 audioSource.pitch = 1 + Combo * .08f;
                 audioSource.PlayOneShot(catchSound, .25f);
             }
+            if (IsSurfaceMode && Caught >= SurfaceCatchGoal) EndRound();
+        }
+
+        bool SpawnSurfaceTarget()
+        {
+            for (int attempt = 0; attempt < 80; attempt++)
+            {
+                if (!scanner.TryGetRandomSurfacePoint(out Vector3 point, out Vector3 normal)) return false;
+                float distance = Vector3.Distance(point, ViewCamera.transform.position);
+                if (distance < .6f || distance > 10) continue;
+                bool overlaps = false;
+                foreach (var other in targets)
+                    if (Vector3.Distance(other.SurfacePoint, point) < .35f) { overlaps = true; break; }
+                if (overlaps) continue;
+                var target = Instantiate(targetPrefab, point, Quaternion.identity, arena);
+                target.InitializeSurface(this, point, normal);
+                targets.Add(target);
+                return true;
+            }
+            return false;
         }
 
         public void RegisterEscape(CatchTarget target)
@@ -367,7 +413,7 @@ namespace CatchAR
             Phase = GamePhase.Result;
             phaseTime = 0;
             ClearTargets();
-            if (Score > Best)
+            if (!IsSurfaceMode && Score > Best)
             {
                 Best = Score;
                 PlayerPrefs.SetInt("CatchAR.Best", Best);

@@ -15,6 +15,9 @@ namespace CatchAR
         public bool IsGold { get; private set; }
         public float GroundHeight { get; private set; }
         public bool Resolved => resolved;
+        public bool IsSurfaceTarget { get; private set; }
+        public Vector3 SurfacePoint { get; private set; }
+        Vector3 surfaceNormal;
         CatchGame game;
         float fallSpeed, acceleration, age, landedAge, landingClearance;
         const float LandingDuration = .25f;
@@ -50,7 +53,15 @@ namespace CatchAR
             core.Rotate(24 * dt, 50 * dt, 16 * dt);
             ring.Rotate(0, 0, -70 * dt, Space.Self);
             float scale = Mathf.SmoothStep(0, 1, Mathf.Clamp01(age / .22f));
-            transform.localScale = Vector3.one * scale;
+            transform.localScale = Vector3.one * scale * (IsSurfaceTarget ? .65f : 1);
+            if (IsSurfaceTarget)
+            {
+                float Offset(Renderer r) => Vector3.Dot(new Vector3(Mathf.Abs(surfaceNormal.x), Mathf.Abs(surfaceNormal.y), Mathf.Abs(surfaceNormal.z)), r.bounds.extents)
+                    - Vector3.Dot(surfaceNormal, r.bounds.center - transform.position);
+                float offset = Mathf.Max(Offset(coreRenderer), Offset(ringRenderer));
+                transform.position = SurfacePoint + surfaceNormal * (offset + .005f);
+                return;
+            }
             // Contact follows the visible mesh, including its current rotation.
             float clearance = transform.position.y - Mathf.Min(coreRenderer.bounds.min.y, ringRenderer.bounds.min.y);
             Vector3 position = transform.position;
@@ -78,8 +89,17 @@ namespace CatchAR
             Destroy(gameObject);
         }
 
+        public void InitializeSurface(CatchGame owner, Vector3 point, Vector3 normal)
+        {
+            Initialize(owner, false, point.y, 0, 0);
+            IsSurfaceTarget = true; SurfacePoint = point; surfaceNormal = normal.normalized;
+            transform.position = point + surfaceNormal * .15f;
+            transform.localScale = Vector3.one * .65f;
+        }
+
         public void KeepClearOfPlayer(Transform player, float spawnDistance)
         {
+            if (IsSurfaceTarget) return;
             Vector3 delta = Vector3.ProjectOnPlane(transform.position - player.position, Vector3.up);
             if (delta.sqrMagnitude >= 1) return;
             if (delta.sqrMagnitude < .0001f) delta = Vector3.ProjectOnPlane(player.forward, Vector3.up);

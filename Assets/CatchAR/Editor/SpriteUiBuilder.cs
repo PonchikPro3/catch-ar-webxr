@@ -16,6 +16,21 @@ namespace CatchAR.Editor
         static Sprite frame, clock, upperButton, lowerButton, burst;
         static Material hudType, buttonMaterial;
 
+        public static void ConfigureSurfaceHud(CatchHud hud)
+        {
+            if (hud.elapsedText == null)
+            {
+                font = hud.score.font;
+                hud.elapsedText = Label("ElapsedTime", hud.playHud.transform, "00:00.00", .5f, 1, .5f, 1, 40, WarmPalette.Cream);
+                hud.elapsedText.fontSharedMaterial = hud.score.fontSharedMaterial;
+                hud.elapsedText.rectTransform.sizeDelta = new Vector2(500, 68);
+                hud.elapsedText.rectTransform.anchoredPosition = new Vector2(0, -248);
+            }
+            hud.elapsedText.gameObject.SetActive(false);
+            hud.resultHeading = hud.resultStack.Find("Finished").GetComponent<TMP_Text>();
+            EditorUtility.SetDirty(hud);
+        }
+
         public static void ConfigureScanProgress(CatchHud hud)
         {
             if (hud == null || hud.scanInfo == null)
@@ -296,6 +311,7 @@ namespace CatchAR.Editor
             hud.replayButton = Button("Replay", hud.resultStack, "Ещё раз", 0, .31f, 1, .60f, upperButton, WarmPalette.Red, WarmPalette.Cream);
             hud.menuButton = Button("Menu", hud.resultStack, "В меню", 0, 0, 1, .29f, lowerButton, WarmPalette.Peach, WarmPalette.Ink);
             ConfigureScanProgress(hud);
+            ConfigureSurfaceHud(hud);
             hud.effects = Rect("TouchEffects", safe, 0, 0, 1, 1);
             hud.touchBurst = burst;
             play.gameObject.SetActive(false);

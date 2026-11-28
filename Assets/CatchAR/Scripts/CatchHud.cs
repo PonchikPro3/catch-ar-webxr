@@ -8,6 +8,7 @@ namespace CatchAR
     {
         public GameObject menu, playHud, result, placement, countdown;
         public TMP_Text score, countdownText, resultScore, placementText, menuNotice;
+        public TMP_Text elapsedText, resultHeading;
         public UnityEngine.UI.Slider timeSlider;
         public Graphic timerFill;
         public RectTransform timerRow, clockIcon, scoreRect, safeArea, menuStack, resultStack, placementStack, effects;
@@ -42,6 +43,7 @@ namespace CatchAR
         {
             if (game == null) return;
             bool playing = game.Phase == GamePhase.Playing;
+            bool surface = game.IsSurfaceMode;
             menu.SetActive(game.Phase == GamePhase.Ready);
             modes.SetActive(game.Phase == GamePhase.ModeSelection);
             scanHud.SetActive(game.Phase == GamePhase.Scanning);
@@ -60,17 +62,19 @@ namespace CatchAR
             }
             scoreAge += Time.unscaledDeltaTime;
             shownScore = Mathf.Lerp(scoreFrom, game.Score, Mathf.SmoothStep(0, 1, scoreAge / .28f));
-            score.SetText(Mathf.RoundToInt(shownScore).ToString());
+            score.SetText(Mathf.RoundToInt(shownScore).ToString() + (surface ? " / 10" : ""));
+            elapsedText.gameObject.SetActive(surface);
+            elapsedText.text = FormatElapsed(game.Elapsed);
             float punch = Mathf.Sin(Mathf.Min(1, scoreAge / .42f) * Mathf.PI) * Mathf.Exp(-scoreAge * 4);
             scoreRect.localScale = Vector3.one * (1 + .4f * punch);
             scoreRect.localRotation = Quaternion.Euler(0, 0, -7 * punch);
             score.color = Color.Lerp(WarmPalette.Cream, WarmPalette.Orange, punch * 2);
-            float ratio = Mathf.Clamp01(game.Remaining / game.roundDuration);
+            float ratio = surface ? (float)game.Caught / CatchGame.SurfaceCatchGoal : Mathf.Clamp01(game.Remaining / game.roundDuration);
             timeSlider.SetValueWithoutNotify(ratio);
-            int second = Mathf.CeilToInt(game.Remaining);
+            int second = surface ? Mathf.FloorToInt(game.Elapsed) : Mathf.CeilToInt(game.Remaining);
             if (second != lastSecond) { lastSecond = second; tickAge = 0; }
             tickAge += Time.unscaledDeltaTime;
-            bool urgent = playing && game.Remaining <= 10;
+            bool urgent = playing && !surface && game.Remaining <= 10;
             float tick = playing ? Mathf.Exp(-tickAge * 9) : 0;
             float shake = urgent ? Mathf.Sin(Time.unscaledTime * 24) * 5 : Mathf.Sin(tickAge * 18) * tick * 9;
             clockIcon.localRotation = Quaternion.Euler(0, 0, shake);
@@ -78,8 +82,15 @@ namespace CatchAR
             timerRow.localScale = Vector3.one * (1 + (urgent ? .018f * Mathf.Sin(Time.unscaledTime * 12) : .006f * tick));
             timerFill.color = urgent ? Color.Lerp(WarmPalette.Red, WarmPalette.Orange, .5f + .5f * Mathf.Sin(Time.unscaledTime * 8))
                 : Color.Lerp(WarmPalette.Orange, WarmPalette.Peach, ratio);
-            resultScore.text = game.Score.ToString();
+            resultHeading.text = surface ? "10 объектов поймано!\nТвоё время" : "Время вышло";
+            resultScore.text = surface ? FormatElapsed(game.Elapsed) : game.Score.ToString();
             menuNotice.gameObject.SetActive(Time.unscaledTime < noticeUntil);
+        }
+
+        public static string FormatElapsed(float seconds)
+        {
+            int hundredths = Mathf.FloorToInt(Mathf.Max(0, seconds) * 100);
+            return (hundredths / 6000).ToString("00") + ":" + (hundredths / 100 % 60).ToString("00") + "." + (hundredths % 100).ToString("00");
         }
 
         void LateUpdate()
