@@ -27,7 +27,7 @@ namespace CatchAR
         public bool IsTracking { get; private set; }
         public string Backend { get; private set; } = "waiting";
         public bool Unavailable { get; private set; }
-        public bool PrecisionAvailable => Backend == "depth" || Backend == "mesh";
+        public bool PrecisionAvailable => Backend == "depth" || Backend == "mesh" || Backend == "hit-test";
         public int Count { get; private set; }
         public int CandidateCount => regions.Count;
         public int SurfaceCount { get; private set; }

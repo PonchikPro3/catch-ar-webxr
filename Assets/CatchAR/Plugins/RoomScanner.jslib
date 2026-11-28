@@ -14,8 +14,7 @@ mergeInto(LibraryManager.library, {
   session.requestReferenceSpace('viewer').then(async function(viewer){
    if(!state.active)return;if(!session.requestHitTestSource){state.error=true;return;}
    var first;
-   try{first=await session.requestHitTestSource({space:viewer,entityTypes:['mesh']});state.kind='mesh';}
-   catch(e){first=await session.requestHitTestSource({space:viewer,entityTypes:['plane']});state.kind='plane';}
+   first=await session.requestHitTestSource({space:viewer,entityTypes:['plane']});state.kind='plane';
    if(!state.active){first.cancel();return;}state.sources.push({source:first,ray:0});
    if(typeof XRRay==='undefined')return;
    var i=1;
@@ -53,12 +52,12 @@ mergeInto(LibraryManager.library, {
     var view=pose&&pose.views&&pose.views[0],depth=null;
     try{if(view&&frame.getDepthInformation)depth=frame.getDepthInformation(view);}catch(e){}
     if(depth&&typeof depth.getDepthInMeters!=='function')depth=null;
-    packet.backend=depth?'depth':state.kind==='mesh'?'mesh':state.kind==='pending'?'waiting':'coarse';
+    packet.backend=depth?'depth':state.kind==='pending'?'waiting':'hit-test';
     if(pose)state.sources.forEach(function(s){
      var results=frame.getHitTestResults(s.source);if(!results.length)return;
      var hit=results[0].getPose(session.refSpace);if(!hit)return;var m=hit.transform.matrix;if(Math.abs(m[5])<.98480775)return;
-     var proof=depth?cellDepth(m,depth,view):state.kind==='mesh'?1:0;
-     packet.hits.push({ray:s.ray,position:{x:m[12],y:m[13],z:-m[14]},normal:{x:m[4],y:m[5],z:-m[6]},verified:proof===1,fullCell:!!depth&&proof===1,rejected:proof===-1});
+     var proof=depth?cellDepth(m,depth,view):1;
+     packet.hits.push({ray:s.ray,position:{x:m[12],y:m[13],z:-m[14]},normal:{x:m[4],y:m[5],z:-m[6]},verified:proof===1,fullCell:proof===1,rejected:proof===-1});
     });
    }catch(e){packet.tracking=false;packet.hits=[];}
    if(state.active)Module.SendMessage(receiver,'ReceiveScanFrame',JSON.stringify(packet));
