@@ -8125,8 +8125,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: CatchAR.Runtime::CatchAR.RoomSurfaceScanner
   surfaceMaterial: {fileID: 2100000, guid: 91d20b2eb53d0d04bbfb613fca25e1e2, type: 2}
   lineMaterial: {fileID: 2100000, guid: 45383e39bce6da64d90893b3fbddec38, type: 2}
-  minimumSurfaceArea: 0.04
-  minimumSurfaceWidth: 0.2
+  minimumSurfaceArea: 0.01
+  minimumSurfaceWidth: 0.1
 --- !u!1 &1428765876
 GameObject:
   m_ObjectHideFlags: 0

@@ -20,8 +20,8 @@ namespace CatchAR
     public sealed class RoomSurfaceScanner : MonoBehaviour
     {
         public Material surfaceMaterial, lineMaterial;
-        [Min(.01f)] public float minimumSurfaceArea = .04f;
-        [Min(.05f)] public float minimumSurfaceWidth = .20f;
+        [Min(.0025f)] public float minimumSurfaceArea = .01f;
+        [Min(.05f)] public float minimumSurfaceWidth = .10f;
         public bool IsRunning { get; private set; }
         public bool IsPaused { get; private set; }
         public bool IsTracking { get; private set; }
