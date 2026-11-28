@@ -212,7 +212,7 @@ namespace CatchAR.Editor
         {
             PlayerSettings.companyName = "AR Lab";
             PlayerSettings.productName = "Catch AR — Поймай объект";
-            PlayerSettings.bundleVersion = "1.6.0";
+            PlayerSettings.bundleVersion = "1.6.1";
             PlayerSettings.colorSpace = ColorSpace.Linear;
             PlayerSettings.runInBackground = true;
             PlayerSettings.defaultWebScreenWidth = 1280;

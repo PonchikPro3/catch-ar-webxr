@@ -93,25 +93,14 @@ namespace CatchAR
             placementStack.sizeDelta = new Vector2(Mathf.Min(760, width * .9f), 340);
             modeStack.sizeDelta = new Vector2(buttonWidth, buttonWidth * 1.16f);
             scanControls.sizeDelta = new Vector2(Mathf.Min(800, width * .92f), 190);
-            scanInfo.sizeDelta = new Vector2(Mathf.Min(900, width * .92f), 280);
+            scanInfo.sizeDelta = new Vector2(Mathf.Min(840, width - 64), 160);
         }
 
         void RefreshScan()
         {
             var scan = game.scanner;
-            bool native = scan.Backend == "planes";
-            scanCounts.text = Mathf.Min(scan.SurfaceCount, RoomSurfaceScanner.RequiredSurfaces) + " / " + RoomSurfaceScanner.RequiredSurfaces + " поверхностей";
             if (scanProgress != null) scanProgress.SetValueWithoutNotify(scan.Progress);
-            scanSource.text = scan.Backend == "editor" ? "В редакторе нет данных AR — проверь на телефоне" :
-                native ? "Только горизонтальные поверхности · контуры WebXR" :
-                "Hit-test: соседние ячейки объединяются в участки";
-            scanStatus.text = scan.IsComplete ? "Сканирование завершено! Найдено 8 поверхностей." :
-                scan.IsPaused ? "Скан зафиксирован. Можно осмотреть подсветку." :
-                scan.Unavailable ? "Браузер не предоставил сканирование поверхностей." :
-                scan.Backend == "editor" ? "Отладка скана · ожидание данных устройства" :
-                !scan.IsTracking ? "Ищем отслеживание. Медленно перемещай телефон." :
-                scan.AtLimit ? "Достигнут лимит участков. Зафиксируй скан или начни заново." :
-                "Наведи камеру на пол или стол. Двигай телефон медленно.";
+            scanStatus.text = "Сканируй комнату вокруг себя";
             scanPauseCaption.text = scan.IsComplete ? "Скан завершён" : scan.IsPaused ? "Продолжить" : "Зафиксировать";
             scanPauseButton.interactable = !scan.IsComplete && (scan.IsPaused || (scan.Count > 0 && scan.IsTracking));
         }

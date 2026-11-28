@@ -18,7 +18,7 @@ namespace CatchAR.Editor
 
         public static void ConfigureScanProgress(CatchHud hud)
         {
-            if (hud == null || hud.scanInfo == null || hud.scanCounts == null || hud.scanSource == null)
+            if (hud == null || hud.scanInfo == null)
                 throw new Exception("Scan HUD references are missing");
             if (hud.scanProgress == null)
             {
@@ -35,15 +35,50 @@ namespace CatchAR.Editor
                 hud.scanProgress.navigation = new UnityEngine.UI.Navigation { mode = UnityEngine.UI.Navigation.Mode.None };
             }
             hud.scanProgress.SetValueWithoutNotify(0);
-            var count = hud.scanCounts.rectTransform;
-            count.anchorMin = new Vector2(.03f, .54f); count.anchorMax = new Vector2(.97f, .79f);
-            count.offsetMin = count.offsetMax = Vector2.zero;
-            hud.scanCounts.text = "0 / 8 поверхностей";
-            var source = hud.scanSource.rectTransform;
-            source.anchorMin = new Vector2(.03f, .04f); source.anchorMax = new Vector2(.97f, .29f);
-            source.offsetMin = source.offsetMax = Vector2.zero;
-            hud.scanInfo.sizeDelta = new Vector2(hud.scanInfo.sizeDelta.x, 280);
+            foreach (string name in new[] { "Backing", "ScanTitle", "Counts", "Source" })
+            {
+                var child = hud.scanInfo.Find(name);
+                if (child != null) UnityEngine.Object.DestroyImmediate(child.gameObject);
+            }
+            var status = hud.scanStatus.rectTransform;
+            Transform oldHint = status.parent;
+            status.SetParent(hud.scanInfo, false);
+            status.anchorMin = new Vector2(0, 0); status.anchorMax = new Vector2(1, .4f);
+            status.offsetMin = status.offsetMax = Vector2.zero;
+            hud.scanStatus.text = "Сканируй комнату вокруг себя";
+            hud.scanStatus.color = WarmPalette.Cream;
+            if (oldHint != hud.scanInfo && oldHint.name == "ScanInstructions") UnityEngine.Object.DestroyImmediate(oldHint.gameObject);
+            hud.scanInfo.sizeDelta = new Vector2(840, 160);
+            hud.scanInfo.anchoredPosition = new Vector2(0, -40);
+            var progress = (RectTransform)hud.scanProgress.transform;
+            progress.anchorMin = new Vector2(0, .6f); progress.anchorMax = new Vector2(1, .6f);
+            progress.sizeDelta = new Vector2(0, 62); progress.anchoredPosition = Vector2.zero;
+            var timerOutline = hud.timeSlider.transform.Find("Outline").GetComponent<UnityEngine.UI.Image>();
+            if (progress.Find("Outline") == null)
+                Image("Outline", progress, 0, 0, 1, 1, timerOutline.sprite, WarmPalette.Orange);
+            ConfigureFill(hud.scanProgress);
+            ConfigureFill(hud.timeSlider);
             EditorUtility.SetDirty(hud);
+        }
+
+        public static void ConfigureFill(UnityEngine.UI.Slider slider)
+        {
+            slider.enabled = false;
+            var area = (RectTransform)slider.transform.Find("FillArea");
+            area.anchorMin = new Vector2(0, .12f); area.anchorMax = new Vector2(1, .88f);
+            area.offsetMin = area.offsetMax = Vector2.zero;
+            var fill = slider.fillRect.GetComponent<TimerFillGraphic>();
+            fill.type = UnityEngine.UI.Image.Type.Filled;
+            fill.fillMethod = UnityEngine.UI.Image.FillMethod.Horizontal;
+            fill.fillOrigin = 0;
+            fill.color = WarmPalette.Peach;
+            fill.rectTransform.anchorMin = Vector2.zero; fill.rectTransform.anchorMax = Vector2.one;
+            fill.rectTransform.offsetMin = fill.rectTransform.offsetMax = Vector2.zero;
+            var track = slider.transform.Find("Track").GetComponent<TimerFillGraphic>();
+            track.type = UnityEngine.UI.Image.Type.Simple;
+            track.color = new Color(WarmPalette.Ink.r, WarmPalette.Ink.g, WarmPalette.Ink.b, .9f);
+            slider.enabled = true;
+            EditorUtility.SetDirty(slider);
         }
 
         [MenuItem("Catch AR/Apply sprite UI")]
@@ -191,7 +226,6 @@ namespace CatchAR.Editor
             Label("ScanTitle", hud.scanInfo, "СКАН КОМНАТЫ · ОТЛАДКА", .03f, .8f, .97f, .98f, 32, WarmPalette.Ink);
             hud.scanCounts = Label("Counts", hud.scanInfo, "Поверхностей: 0", .03f, .4f, .97f, .78f, 28, WarmPalette.Ink);
             hud.scanSource = Label("Source", hud.scanInfo, "Ожидание данных устройства", .03f, .05f, .97f, .37f, 25, WarmPalette.Ink);
-            ConfigureScanProgress(hud);
             hud.scanControls = Center("ScanControls", scan, 800, 250);
             hud.scanControls.anchorMin = hud.scanControls.anchorMax = new Vector2(.5f, 0);
             hud.scanControls.pivot = new Vector2(.5f, 0);
@@ -261,6 +295,7 @@ namespace CatchAR.Editor
             hud.resultScore = Label("FinalScore", hud.resultStack, "0", 0, .62f, 1, .88f, 120, WarmPalette.Red);
             hud.replayButton = Button("Replay", hud.resultStack, "Ещё раз", 0, .31f, 1, .60f, upperButton, WarmPalette.Red, WarmPalette.Cream);
             hud.menuButton = Button("Menu", hud.resultStack, "В меню", 0, 0, 1, .29f, lowerButton, WarmPalette.Peach, WarmPalette.Ink);
+            ConfigureScanProgress(hud);
             hud.effects = Rect("TouchEffects", safe, 0, 0, 1, 1);
             hud.touchBurst = burst;
             play.gameObject.SetActive(false);
