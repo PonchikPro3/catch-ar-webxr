@@ -28,8 +28,7 @@ namespace CatchAR.Editor
                 var body = renderers.FirstOrDefault(r => r.name == "Durachok") ?? renderers[0];
                 var colors = new[] { WarmPalette.Red, WarmPalette.Orange, WarmPalette.Peach, WarmPalette.Cream };
                 var materials = colors.Select((c, i) => Material("Durachok Body " + i, c)).ToArray();
-                var face = Material("Durachok Face", WarmPalette.Ink);
-                foreach (var r in renderers) r.sharedMaterials = Enumerable.Repeat(r == body ? materials[0] : face, r.sharedMaterials.Length).ToArray();
+                body.sharedMaterials = Enumerable.Repeat(materials[0], body.sharedMaterials.Length).ToArray();
                 var target = root.AddComponent<CatchTarget>();
                 target.core = target.ring = visual;
                 target.coreRenderer = target.ringRenderer = body;
