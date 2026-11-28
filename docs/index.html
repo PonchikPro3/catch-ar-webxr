@@ -36,12 +36,12 @@
       document.querySelector('#loading').style.display='flex';
     }
     const buildUrl='Build';
-    const assetVersion='?v=1.7.0';
+    const assetVersion='?v=1.7.1';
     const config={
       dataUrl:buildUrl+'/WebGL.data'+assetVersion,
       frameworkUrl:buildUrl+'/WebGL.framework.js'+assetVersion,
       codeUrl:buildUrl+'/WebGL.wasm'+assetVersion,
-      streamingAssetsUrl:'StreamingAssets',companyName:'AR Lab',productName:'Catch AR — Поймай объект',productVersion:'1.7.0',
+      streamingAssetsUrl:'StreamingAssets',companyName:'AR Lab',productName:'Catch AR — Поймай объект',productVersion:'1.7.1',
       showBanner:(message,type)=>{if(type==='error')fail(message)},
       autoSyncPersistentDataPath:true,
       devicePixelRatio:Math.min(window.devicePixelRatio||1,1.5)

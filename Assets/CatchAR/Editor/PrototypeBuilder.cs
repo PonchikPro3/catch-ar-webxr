@@ -212,7 +212,7 @@ namespace CatchAR.Editor
         {
             PlayerSettings.companyName = "AR Lab";
             PlayerSettings.productName = "Catch AR — Поймай объект";
-            PlayerSettings.bundleVersion = "1.7.0";
+            PlayerSettings.bundleVersion = "1.7.1";
             PlayerSettings.colorSpace = ColorSpace.Linear;
             PlayerSettings.runInBackground = true;
             PlayerSettings.defaultWebScreenWidth = 1280;
@@ -348,24 +348,7 @@ namespace CatchAR.Editor
 
         static CatchTarget CreateTargetPrefab()
         {
-            var root = new GameObject("Catchable Energy");
-            var target = root.AddComponent<CatchTarget>();
-            root.AddComponent<SphereCollider>().radius = .20f;
-            var core = Primitive("Energy Core", PrimitiveType.Cube, root.transform, Vector3.zero, Vector3.one * .19f, mint);
-            core.transform.rotation = Quaternion.Euler(35, 35, 20);
-            var orbit = CreateRing("Orbit", root.transform, .15f, .012f, mint);
-            orbit.transform.localRotation = Quaternion.Euler(25, 35, 0);
-            target.core = core.transform;
-            target.ring = orbit.transform;
-            target.coreRenderer = core.GetComponent<Renderer>();
-            target.ringRenderer = orbit.GetComponent<Renderer>();
-            target.mintMaterial = mint;
-            target.goldMaterial = gold;
-            target.mintCoreMaterial = MakeMaterial("Mint Core", new Color(.20f, .65f, .43f), false);
-            target.goldCoreMaterial = MakeMaterial("Gold Core", new Color(.75f, .32f, .025f), false);
-            var prefab = PrefabUtility.SaveAsPrefabAsset(root, "Assets/CatchAR/Prefabs/Catchable Energy.prefab");
-            UnityEngine.Object.DestroyImmediate(root);
-            return prefab.GetComponent<CatchTarget>();
+            return DurachokTargetBuilder.Rebuild();
         }
 
         static GameObject Primitive(string name, PrimitiveType type, Transform parent, Vector3 position, Vector3 scale, Material mat)

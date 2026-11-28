@@ -6,9 +6,7 @@ namespace CatchAR
     {
         public static Bounds VisibleBounds(CatchTarget target)
         {
-            Bounds bounds = target.coreRenderer.bounds;
-            bounds.Encapsulate(target.ringRenderer.bounds);
-            return bounds;
+            return target.VisualBounds;
         }
 
         public static bool ScreenHit(Camera camera, Bounds bounds, Vector2 point, float padding)

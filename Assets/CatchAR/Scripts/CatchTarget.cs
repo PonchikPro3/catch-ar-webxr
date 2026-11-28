@@ -12,6 +12,19 @@ namespace CatchAR
         public Material goldMaterial;
         public Material mintCoreMaterial;
         public Material goldCoreMaterial;
+        public Material[] bodyMaterials;
+        public Renderer[] visualRenderers;
+        public Vector3 AngularVelocity { get; private set; }
+        static int lastColor = -1;
+        public Bounds VisualBounds
+        {
+            get
+            {
+                Bounds bounds = coreRenderer.bounds;
+                if (visualRenderers != null) foreach (var r in visualRenderers) if (r != null) bounds.Encapsulate(r.bounds);
+                return bounds;
+            }
+        }
         public bool IsGold { get; private set; }
         public float GroundHeight { get; private set; }
         public bool Resolved => resolved;
@@ -30,8 +43,14 @@ namespace CatchAR
             GroundHeight = groundHeight;
             fallSpeed = speed;
             acceleration = gravity;
-            coreRenderer.sharedMaterial = gold ? goldCoreMaterial : mintCoreMaterial;
-            ringRenderer.sharedMaterial = gold ? goldMaterial : mintMaterial;
+            if (bodyMaterials != null && bodyMaterials.Length > 0)
+            {
+                int index = lastColor < 0 || bodyMaterials.Length == 1 ? Random.Range(0, bodyMaterials.Length)
+                    : (lastColor + Random.Range(1, bodyMaterials.Length)) % bodyMaterials.Length;
+                coreRenderer.sharedMaterial = bodyMaterials[index]; lastColor = index;
+            }
+            AngularVelocity = Random.onUnitSphere * Random.Range(35f, 160f);
+            core.localRotation = Random.rotationUniform;
         }
 
         void Update()
@@ -50,20 +69,16 @@ namespace CatchAR
                 return;
             }
             age += dt;
-            core.Rotate(24 * dt, 50 * dt, 16 * dt);
-            ring.Rotate(0, 0, -70 * dt, Space.Self);
+            if (!IsSurfaceTarget) core.Rotate(AngularVelocity * dt, Space.Self);
             float scale = Mathf.SmoothStep(0, 1, Mathf.Clamp01(age / .22f));
             transform.localScale = Vector3.one * scale * (IsSurfaceTarget ? .65f : 1);
             if (IsSurfaceTarget)
             {
-                float Offset(Renderer r) => Vector3.Dot(new Vector3(Mathf.Abs(surfaceNormal.x), Mathf.Abs(surfaceNormal.y), Mathf.Abs(surfaceNormal.z)), r.bounds.extents)
-                    - Vector3.Dot(surfaceNormal, r.bounds.center - transform.position);
-                float offset = Mathf.Max(Offset(coreRenderer), Offset(ringRenderer));
-                transform.position = SurfacePoint + surfaceNormal * (offset + .005f);
+                FacePlayer(game.ViewCamera.transform);
                 return;
             }
             // Contact follows the visible mesh, including its current rotation.
-            float clearance = transform.position.y - Mathf.Min(coreRenderer.bounds.min.y, ringRenderer.bounds.min.y);
+            float clearance = transform.position.y - VisualBounds.min.y;
             Vector3 position = transform.position;
             position.y -= fallSpeed * dt + .5f * acceleration * dt * dt;
             fallSpeed += acceleration * dt;
@@ -95,11 +110,12 @@ namespace CatchAR
             IsSurfaceTarget = true; SurfacePoint = point; surfaceNormal = normal.normalized;
             transform.position = point + surfaceNormal * .15f;
             transform.localScale = Vector3.one * .65f;
+            FacePlayer(owner.ViewCamera.transform);
         }
 
         public void KeepClearOfPlayer(Transform player, float spawnDistance)
         {
-            if (IsSurfaceTarget) return;
+            if (IsSurfaceTarget) { FacePlayer(player); return; }
             Vector3 delta = Vector3.ProjectOnPlane(transform.position - player.position, Vector3.up);
             if (delta.sqrMagnitude >= 1) return;
             if (delta.sqrMagnitude < .0001f) delta = Vector3.ProjectOnPlane(player.forward, Vector3.up);
@@ -108,6 +124,16 @@ namespace CatchAR
             Vector3 safe = player.position + delta.normalized * Mathf.Max(1.2f, spawnDistance);
             position.x = safe.x; position.z = safe.z;
             transform.position = position;
+        }
+
+        public void FacePlayer(Transform player)
+        {
+            Vector3 direction = Vector3.ProjectOnPlane(player.position - SurfacePoint, surfaceNormal);
+            if (direction.sqrMagnitude > .0001f) core.rotation = Quaternion.LookRotation(direction, surfaceNormal);
+            Bounds bounds = VisualBounds;
+            float offset = Vector3.Dot(new Vector3(Mathf.Abs(surfaceNormal.x), Mathf.Abs(surfaceNormal.y), Mathf.Abs(surfaceNormal.z)), bounds.extents)
+                - Vector3.Dot(surfaceNormal, bounds.center - transform.position);
+            transform.position = SurfacePoint + surfaceNormal * (offset + .005f);
         }
     }
 }
