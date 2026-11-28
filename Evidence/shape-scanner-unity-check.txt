@@ -1,1 +1,0 @@
-Passed on synthetic data: isolated tiny patch hidden; 20x20cm connected patch accepted; L-shaped gap and central hole preserved without hull filling; repeated single-quadrant observations cannot confirm a cell; two depth rejections remove support; coarse-plane-only mode hides geometry. Not a device test.

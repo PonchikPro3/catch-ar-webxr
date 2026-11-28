@@ -1,1 +1,0 @@
-PASS: optional CPU depth configuration; nine rays and cancellation; normalized depth coordinates; center plus all four cell corners; edge/overhang rejection; coarse planes never verify geometry; mesh-only samples require quadrant coverage in Unity. Mock XR frames, not a phone test.

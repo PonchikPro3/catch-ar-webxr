@@ -98,21 +98,19 @@ namespace CatchAR
         void RefreshScan()
         {
             var scan = game.scanner;
-            scanCounts.text = "Поверхностей: " + scan.SurfaceCount + " · ячеек: " + scan.Count + "\nСетка 5 × 5 см · кандидатов: " + scan.CandidateCount;
+            bool native = scan.Backend == "planes";
+            scanCounts.text = (native ? "Горизонтальных поверхностей: " : "Найденных участков: ") + scan.Count + "\nСетка 5 × 5 см";
             scanSource.text = scan.Backend == "editor" ? "В редакторе нет данных AR — проверь на телефоне" :
-                scan.Backend == "hit-test" ? "Скан по попаданиям лучей · глубина недоступна, края приблизительные" :
-                scan.Backend == "depth" ? "Форма подтверждается глубиной в центре и углах ячейки" :
-                scan.Backend == "mesh" ? "Форма по mesh hit-test · без заполнения промежутков" : "Ожидание данных формы";
+                native ? "Только горизонтальные поверхности · контуры WebXR" :
+                "Hit-test: подтверждённые ячейки, без полных границ";
             scanStatus.text = scan.IsPaused ? "Скан зафиксирован. Можно осмотреть подсветку." :
                 scan.Unavailable ? "Браузер не предоставил сканирование поверхностей." :
                 scan.Backend == "editor" ? "Отладка скана · ожидание данных устройства" :
                 !scan.IsTracking ? "Ищем отслеживание. Медленно перемещай телефон." :
-                scan.CandidateCount == 0 ? "Наведи центр экрана на пол или стол и медленно двигай телефон." :
-                scan.Count == 0 ? "Точки найдены. Просканируй соседний участок размером от 10 × 10 см." :
                 scan.AtLimit ? "Достигнут лимит участков. Зафиксируй скан или начни заново." :
-                "Проведи камерой по всей поверхности. Минимальный участок — 10 × 10 см.";
+                "Наведи камеру на пол или стол. Двигай телефон медленно.";
             scanPauseCaption.text = scan.IsPaused ? "Продолжить" : "Зафиксировать";
-            scanPauseButton.interactable = scan.IsPaused || (scan.Count > 0 && scan.IsTracking && scan.PrecisionAvailable);
+            scanPauseButton.interactable = scan.IsPaused || (scan.Count > 0 && scan.IsTracking);
         }
 
         public void SetPlacement(bool found, bool fallbackAvailable)
